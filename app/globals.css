@@ -96,6 +96,48 @@ body {
   border: 1px solid rgba(51, 51, 51, 0.5);
 }
 
+/* Animated Gradients */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #3b82f6, #8b5cf6, #06b6d4, #ec4899);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+.animated-gradient-slow {
+  background: linear-gradient(135deg, #1a1f2e, #2d3748, #1a202c);
+  background-size: 200% 200%;
+  animation: gradient-shift 20s ease infinite;
+}
+
+.gradient-border {
+  position: relative;
+  background: var(--surface);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  background: linear-gradient(45deg, #3b82f6, #8b5cf6, #06b6d4);
+  border-radius: inherit;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: xor;
+  -webkit-mask-composite: xor;
+}
+
+.gradient-border-animated::before {
+  background: linear-gradient(-45deg, #3b82f6, #8b5cf6, #06b6d4, #ec4899);
+  background-size: 400% 400%;
+  animation: gradient-shift 10s ease infinite;
+}
+
 /* Profit/Loss colors */
 .profit {
   color: var(--primary);
