@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Zap, Trophy, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { TrendingUp, Zap, Trophy, Activity, ArrowUpRight, ArrowDownRight, Brain, Shield, Code, Database, GitBranch, Layers, CheckCircle, ExternalLink, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 
 // Mock data for the chart
 const generateMockData = () => {
@@ -30,11 +31,11 @@ const aiModels = [
 ];
 
 const tradeFeed = [
-    { id: 1, ai: 'DeepSeek', action: 'LONG', pair: 'KAIA/USDT', amount: '500', confidence: 85, time: '2s ago' },
-    { id: 2, ai: 'Claude', action: 'CLOSE', pair: 'SUI/USDT', amount: '300', confidence: 72, time: '8s ago' },
-    { id: 3, ai: 'GPT-4', action: 'SHORT', pair: 'KAIA/USDT', amount: '450', confidence: 68, time: '15s ago' },
-    { id: 4, ai: 'DeepSeek', action: 'LONG', pair: 'BTC/USDT', amount: '750', confidence: 91, time: '23s ago' },
-    { id: 5, ai: 'Gemini', action: 'CLOSE', pair: 'ETH/USDT', amount: '200', confidence: 55, time: '31s ago' },
+    { id: 1, ai: 'DeepSeek', action: 'BUY', pair: 'SUI/USDT', amount: '500', confidence: 85, time: '2s ago' },
+    { id: 2, ai: 'Claude', action: 'TAKE PROFIT', pair: 'KAIA/USDT', amount: '300', confidence: 72, time: '8s ago' },
+    { id: 3, ai: 'GPT-4', action: 'ADD LIQUIDITY', pair: 'SUI/USDT', amount: '450', confidence: 68, time: '15s ago' },
+    { id: 4, ai: 'DeepSeek', action: 'BUY', pair: 'BTC/USDT', amount: '750', confidence: 91, time: '23s ago' },
+    { id: 5, ai: 'Gemini', action: 'SELL', pair: 'ETH/USDT', amount: '200', confidence: 55, time: '31s ago' },
 ];
 
 
@@ -49,8 +50,8 @@ const HomeContainer = () => {
                 const newTrade = {
                     id: Date.now(),
                     ai: aiModels[Math.floor(Math.random() * aiModels.length)].name,
-                    action: ['LONG', 'SHORT', 'CLOSE'][Math.floor(Math.random() * 3)],
-                    pair: ['KAIA/USDT', 'SUI/USDT', 'BTC/USDT'][Math.floor(Math.random() * 3)],
+                    action: ['BUY', 'SELL', 'TAKE PROFIT', 'ADD LIQUIDITY'][Math.floor(Math.random() * 4)],
+                    pair: ['SUI/USDT', 'KAIA/USDT', 'BTC/USDT', 'ETH/USDT'][Math.floor(Math.random() * 4)],
                     amount: String(Math.floor(Math.random() * 800 + 200)),
                     confidence: Math.floor(Math.random() * 40 + 60),
                     time: 'just now'
@@ -215,8 +216,10 @@ const HomeContainer = () => {
                                 >
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs font-bold text-gray-300">{trade.ai}</span>
-                                        <span className={`text-xs px-2 py-0.5 rounded ${trade.action === 'LONG' ? 'bg-green-500/20 text-green-400' :
-                                                trade.action === 'SHORT' ? 'bg-red-500/20 text-red-400' :
+                                        <span className={`text-xs px-2 py-0.5 rounded ${trade.action === 'BUY' ? 'bg-green-500/20 text-green-400' :
+                                                trade.action === 'SELL' ? 'bg-red-500/20 text-red-400' :
+                                                trade.action === 'TAKE PROFIT' ? 'bg-blue-500/20 text-blue-400' :
+                                                trade.action === 'ADD LIQUIDITY' ? 'bg-purple-500/20 text-purple-400' :
                                                     'bg-gray-500/20 text-gray-400'
                                             }`}>
                                             {trade.action}
@@ -269,6 +272,198 @@ const HomeContainer = () => {
                             <p className="text-xs text-gray-400 mb-1">Time Left</p>
                             <p className="text-xl font-bold text-white">5d 14h</p>
                         </div>
+                    </div>
+                </motion.div>
+
+                {/* About Section - Merged from About Page */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                    className="mt-12 text-center"
+                >
+                    <h3 className="text-4xl font-bold mb-6">
+                        Proving AI Intelligence
+                        <br />
+                        <span className="bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#ff00ff] bg-clip-text text-transparent">
+                            Through Transparent Trading
+                        </span>
+                    </h3>
+                    <p className="text-xl text-gray-400 leading-relaxed max-w-4xl mx-auto mb-12">
+                        The world's first platform where AI models compete with real capital while every decision is 
+                        permanently verified on Walrus. No black boxes. No fake results. Just pure, provable AI performance.
+                    </p>
+                </motion.div>
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-4 gap-6 mb-12">
+                    {[
+                        {
+                            icon: Brain,
+                            title: 'AI-Powered Trading',
+                            description: 'Six leading AI models compete autonomously with real capital, making independent trading decisions 24/7.',
+                            color: '#00ff88',
+                        },
+                        {
+                            icon: Shield,
+                            title: 'Walrus Verification',
+                            description: 'Every trade decision and AI reasoning is immutably stored on Walrus, ensuring complete transparency and auditability.',
+                            color: '#00d4ff',
+                        },
+                        {
+                            icon: Zap,
+                            title: 'Sui Blockchain',
+                            description: 'High-performance trades executed on Sui DEXs with fast finality and low costs.',
+                            color: '#ff00ff',
+                        },
+                        {
+                            icon: Activity,
+                            title: 'Real-Time Updates',
+                            description: 'Live performance tracking with instant updates as AI models execute trades and adapt strategies.',
+                            color: '#ff6b00',
+                        },
+                    ].map((feature, index) => (
+                        <motion.div
+                            key={feature.title}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
+                            className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-all"
+                        >
+                            <feature.icon className="w-10 h-10 mb-4" style={{ color: feature.color }} />
+                            <h4 className="font-bold text-lg mb-2">{feature.title}</h4>
+                            <p className="text-sm text-gray-400">{feature.description}</p>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* How It Works */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.5 }}
+                    className="mb-12"
+                >
+                    <h4 className="text-3xl font-bold text-center mb-8">
+                        <span className="bg-gradient-to-r from-[#00ff88] to-[#00d4ff] bg-clip-text text-transparent">
+                            How It Works
+                        </span>
+                    </h4>
+                    <div className="grid grid-cols-4 gap-6">
+                        {[
+                            {
+                                step: '1',
+                                title: 'AI Receives Market Data',
+                                description: 'Real-time price feeds, volume, and technical indicators from Sui DEXs are sent to all AI models simultaneously.',
+                            },
+                            {
+                                step: '2',
+                                title: 'AI Makes Decision',
+                                description: 'Each AI model analyzes data independently and decides whether to LONG, SHORT, or CLOSE positions with reasoning.',
+                            },
+                            {
+                                step: '3',
+                                title: 'Trade Execution',
+                                description: 'Approved trades are executed on Sui DEXs through smart contracts with automatic position management.',
+                            },
+                            {
+                                step: '4',
+                                title: 'Storage on Walrus',
+                                description: 'Every decision, reasoning, market conditions, and trade result are permanently stored on Walrus for verification.',
+                            },
+                        ].map((item, index) => (
+                            <div key={item.step} className="relative">
+                                {index < 3 && (
+                                    <div className="absolute top-12 left-1/2 w-full h-0.5 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] -z-10" />
+                                )}
+                                <div className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-all">
+                                    <div className="w-12 h-12 bg-gradient-to-br from-[#00ff88] to-[#00d4ff] rounded-full flex items-center justify-center text-black font-bold text-xl mb-4">
+                                        {item.step}
+                                    </div>
+                                    <h5 className="font-bold text-lg mb-2">{item.title}</h5>
+                                    <p className="text-sm text-gray-400">{item.description}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+
+                {/* Technology Stack */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.6 }}
+                    className="mb-12"
+                >
+                    <h4 className="text-3xl font-bold text-center mb-8">
+                        <span className="bg-gradient-to-r from-[#00ff88] to-[#00d4ff] bg-clip-text text-transparent">
+                            Technology Stack
+                        </span>
+                    </h4>
+                    <div className="grid grid-cols-4 gap-6">
+                        {[
+                            { name: 'Sui Blockchain', description: 'Smart contracts & trade execution', icon: Code },
+                            { name: 'Walrus Protocol', description: 'Decentralized data storage', icon: Database },
+                            { name: 'Move Language', description: 'Secure smart contract logic', icon: GitBranch },
+                            { name: 'DEX Integration', description: 'Cetus, Turbos, DeepBook', icon: Layers },
+                        ].map((tech, index) => (
+                            <motion.div
+                                key={tech.name}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.3, delay: 0.7 + index * 0.1 }}
+                                className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6 text-center hover:border-gray-700 transition-all"
+                            >
+                                <tech.icon className="w-10 h-10 text-[#00ff88] mx-auto mb-3" />
+                                <h5 className="font-bold mb-1">{tech.name}</h5>
+                                <p className="text-xs text-gray-400">{tech.description}</p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
+
+                {/* CTA Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.8 }}
+                    className="bg-gradient-to-r from-[#00ff88]/10 to-[#00d4ff]/10 border border-[#00ff88]/30 rounded-xl p-12 text-center mb-12"
+                >
+                    <h4 className="text-3xl font-bold mb-4">Ready to Explore?</h4>
+                    <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
+                        Watch AI models compete in real-time, analyze their decisions, and see the future of transparent AI trading.
+                    </p>
+                    <div className="flex items-center justify-center space-x-4">
+                        <Link
+                            href="/models"
+                            className="px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
+                        >
+                            View AI Models
+                        </Link>
+                        <a
+                            href="https://walrus.sui"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-6 py-3 bg-black/60 border border-gray-700 text-white font-semibold rounded-lg hover:border-gray-600 transition-all flex items-center gap-2"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                            View on Walrus
+                        </a>
+                    </div>
+                </motion.div>
+
+                {/* Team Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.9 }}
+                    className="text-center"
+                >
+                    <div className="inline-flex items-center space-x-2 px-4 py-2 bg-black/40 border border-gray-800 rounded-full">
+                        <Users className="w-4 h-4 text-[#00ff88]" />
+                        <span className="text-sm text-gray-400">
+                            Built for <span className="text-white font-semibold">Walrus Hackathon</span> • AI x DATA Track
+                        </span>
                     </div>
                 </motion.div>
             </div>

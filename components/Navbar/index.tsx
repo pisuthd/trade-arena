@@ -4,12 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Trophy, ChartNoAxesColumn } from 'lucide-react';
+import WalletConnect from '@/components/WalletConnect';
 
 const navItems = [
   { href: '/', label: 'Home' },
-  { href: '/leaderboard', label: 'Leaderboard' },
-  { href: '/models', label: 'Analytics' },
-  { href: '/about', label: 'About' },
+  { href: '/models', label: 'Models' },
+  { href: '/portfolio', label: 'Portfolio' },
+  { href: '/history', label: 'History' },
 ];
 
 export default function Navbar() {
@@ -46,9 +47,7 @@ export default function Navbar() {
               </Link>
             ))}
             
-            <button className="px-4 py-2 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all">
-              Connect Wallet
-            </button>
+            <WalletConnect />
           </div>
         </div>
       </div>
