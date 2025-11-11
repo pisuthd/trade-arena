@@ -43,4 +43,13 @@ module trade_arena::mock_usdc {
         init(MOCK_USDC {}, ctx)
     }
 
+    #[test_only]
+    /// Mint for testing - returns the coin instead of transferring
+    public fun mint_for_testing(
+        global: &mut USDCGlobal, amount: u64, ctx: &mut TxContext
+    ): Coin<MOCK_USDC> {
+        let minted_balance = balance::increase_supply<MOCK_USDC>(&mut global.supply, amount);
+        coin::from_balance(minted_balance, ctx)
+    }
+
 }
