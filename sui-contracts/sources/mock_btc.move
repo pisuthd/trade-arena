@@ -1,6 +1,7 @@
 module trade_arena::mock_btc {
     use sui::coin::{Self, Coin};
     use sui::balance::{Self, Supply};
+    use sui::object::{Self, UID};
     use sui::transfer;
     use sui::tx_context::TxContext;
     use std::option;

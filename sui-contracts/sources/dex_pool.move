@@ -541,19 +541,12 @@ module trade_arena::dex_pool {
         (numerator / denominator as u64)
     }
 
+    // ======== Test-related Functions =========
+
+
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
-        transfer::transfer(
-            ManagerCap {id: object::new(ctx)},
-            tx_context::sender(ctx)
-        );
-
-        let global = DEXGlobal {
-            id: object::new(ctx),
-            pools: bag::new(ctx),
-            treasury: tx_context::sender(ctx)
-        };
-
-        transfer::share_object(global)
+        init(ctx);
     }
+
 }
