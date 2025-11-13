@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+import 'dotenv/config';
 
 import { validateEnvironment } from './config';
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
