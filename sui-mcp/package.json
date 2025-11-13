@@ -1,0 +1,57 @@
+{
+    "name": "@tamago-labs/trade-arena-mcp",
+    "version": "0.1.0",
+    "description": "MCP server implementation trade arena project for Sui",
+    "main": "dist/index.js",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.ts",
+    "bin": {
+        "trade-arena-mcp": "dist/index.js"
+    },
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "tsup",
+        "prepare": "npm run build",
+        "test": "jest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/tamago-labs/trade-arena.git"
+    },
+    "keywords": [
+        "sui",
+        "blockchain",
+        "ai-agent",
+        "mcp",
+        "model-context-protocol",
+        "claude",
+        "web3"
+    ],
+    "author": "Pisuth",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/tamago-labs/trade-arena/issues"
+    },
+    "homepage": "https://tamagolabs.com",
+    "devDependencies": {
+        "@types/jest": "^29.5.14",
+        "@types/node": "^22.15.2",
+        "dotenv": "^16.5.0",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.3.2",
+        "ts-node": "^10.9.2",
+        "tsup": "^8.4.0",
+        "typescript": "^5.8.3"
+    },
+    "dependencies": { 
+        "@modelcontextprotocol/sdk": "^1.10.2",
+        "@mysten/sui": "^1.29.0",
+        "@mysten/suins": "^0.7.14",
+        "@pythnetwork/hermes-client": "^2.0.0",
+        "axios": "^1.9.0",
+        "bignumber.js": "^9.3.0",
+        "zod": "^3.24.3"
+    }
+}
