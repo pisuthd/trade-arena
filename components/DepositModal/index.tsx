@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { X, Wallet, TrendingUp, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useDepositToVault } from '@/hooks/useSeasonManager';
+import { useCurrentAccount } from '@mysten/dapp-kit';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -20,32 +22,35 @@ interface DepositModalProps {
 export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, vaultInfo }: DepositModalProps) {
   const [step, setStep] = useState(1);
   const [depositAmount, setDepositAmount] = useState('');
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
-
+  
+  const currentAccount = useCurrentAccount();
+  const { depositToVault } = useDepositToVault();
+  
   const minDeposit = vaultInfo.minDeposit;
   const amount = parseFloat(depositAmount) || 0;
+  const isWalletConnected = !!currentAccount;
 
-  const handleConnectWallet = () => {
-    setIsWalletConnected(true);
-  };
-
-  const handleDeposit = () => {
+  const handleDeposit = async () => {
+    if (!currentAccount || amount < minDeposit) return;
+    
     setIsProcessing(true);
-    // Simulate processing
-    setTimeout(() => {
+    try {
+      await depositToVault(1, modelName, amount);
       setIsProcessing(false);
       setIsComplete(true);
       setStep(3);
-    }, 2000);
+    } catch (error) {
+      setIsProcessing(false);
+      console.error('Deposit failed:', error);
+    }
   };
 
   const handleClose = () => {
     if (!isProcessing) {
       setStep(1);
       setDepositAmount('');
-      setIsWalletConnected(false);
       setIsComplete(false);
       onClose();
     }
@@ -194,13 +199,11 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
                 </div>
 
                 {!isWalletConnected ? (
-                  <button
-                    onClick={handleConnectWallet}
-                    className="w-full bg-gray-800 border border-gray-700 text-white font-semibold py-3 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <Wallet className="w-5 h-5" />
-                    <span>Connect Sui Wallet</span>
-                  </button>
+                  <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                    <p className="text-yellow-400 text-sm text-center">
+                      Please connect your wallet using the Connect Wallet button in the navbar
+                    </p>
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-center space-x-3">

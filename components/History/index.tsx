@@ -1,111 +1,36 @@
 "use client"
 
 import React, { useState, useMemo } from 'react';
-import { Brain, Shield, ExternalLink, Clock, TrendingUp, TrendingDown, CheckCircle, XCircle, Activity, Filter, Search } from 'lucide-react';
+import { Brain, Shield, ExternalLink, Clock, TrendingUp, TrendingDown, CheckCircle, XCircle, Activity, Filter, Search, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-// Mock comprehensive trading history data
-const generateMockHistory = () => {
-  const models = ['DeepSeek', 'Claude', 'GPT-4', 'Gemini'];
-  const actions = ['LONG', 'SHORT', 'CLOSE'];
-  const pairs = ['SUI/USDC', 'SUI/USDT', 'SUI/WETH'];
-  const statuses = ['active', 'closed', 'stopped'];
-  
-  const history = [];
-  
-  // Generate 50 mock entries
-  for (let i = 0; i < 50; i++) {
-    const model = models[Math.floor(Math.random() * models.length)];
-    const action = actions[Math.floor(Math.random() * actions.length)];
-    const pair = pairs[Math.floor(Math.random() * pairs.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const isProfitable = Math.random() > 0.4;
-    
-    const entry = 1.5 + Math.random() * 0.8;
-    const exit = status === 'active' ? entry + (Math.random() - 0.5) * 0.2 : entry + (isProfitable ? Math.random() * 0.3 : -Math.random() * 0.2);
-    const amount = 100 + Math.random() * 900;
-    const pnl = status === 'active' ? (exit - entry) * amount : (exit - entry) * amount;
-    
-    // Generate timestamp within last 7 days
-    const timestamp = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
-    
-    history.push({
-      id: `wal_${Math.random().toString(36).substr(2, 9)}`,
-      timestamp,
-      model,
-      action,
-      pair,
-      amount: Math.round(amount),
-      entry: parseFloat(entry.toFixed(4)),
-      current: parseFloat(exit.toFixed(4)),
-      exit: status !== 'active' ? parseFloat(exit.toFixed(4)) : null,
-      pnl: Math.round(pnl),
-      leverage: ['2x', '3x', '4x', '5x'][Math.floor(Math.random() * 4)],
-      confidence: Math.round(70 + Math.random() * 30),
-      status,
-      reasoning: generateReasoning(model, action, isProfitable),
-      walrusLink: 'https://walrus.sui/blob/example',
-    });
-  }
-  
-  return history.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-};
-
-const generateReasoning = (model: string, action: string, isProfitable: boolean) => {
-  const reasons = {
-    'DeepSeek': [
-      'Strong momentum detected with RSI oversold recovery',
-      'Breakout above resistance with volume confirmation',
-      'Bullish divergence on multiple timeframes',
-    ],
-    'Claude': [
-      'Risk-managed entry with stop loss below support',
-      'Conservative position sizing based on volatility',
-      'Long-term trend following with confirmation',
-    ],
-    'GPT-4': [
-      'High-frequency scalping opportunity detected',
-      'Quick momentum play with tight risk management',
-      'Short-term pattern recognition signal',
-    ],
-    'Gemini': [
-      'Contrarian signal - market overextended',
-      'Reversal pattern detected at key levels',
-      'Fade the crowd strategy with statistical edge',
-    ],
-  };
-  
-  const modelReasons = reasons[model as keyof typeof reasons] || reasons['DeepSeek'];
-  const baseReason = modelReasons[Math.floor(Math.random() * modelReasons.length)];
-  
-  if (action === 'CLOSE') {
-    return isProfitable 
-      ? `Target reached - ${baseReason.toLowerCase()}`
-      : `Stop loss triggered - ${baseReason.toLowerCase()}`;
-  }
-  
-  return baseReason;
-};
+import { useTradeHistory, TradeRecord } from '@/hooks/useTradeHistory';
+import { useCurrentAccount } from '@mysten/dapp-kit';
+import { getSeasonStatusText } from '@/hooks/useSeasonManager';
+import Link from 'next/link';
 
 export default function HistoryContainer() {
+  const account = useCurrentAccount();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedModel, setSelectedModel] = useState('all');
   const [selectedAction, setSelectedAction] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedSeason, setSelectedSeason] = useState<number | undefined>();
   const [timeRange, setTimeRange] = useState('7d');
   
-  const historyData = useMemo(() => generateMockHistory(), []);
+  const { trades, isLoading } = useTradeHistory(selectedSeason);
   
   const filteredHistory = useMemo(() => {
-    return historyData.filter(item => {
+    if (!trades) return [];
+    
+    return trades.filter((item: TradeRecord) => {
       // Search filter
-      if (searchTerm && !item.model.toLowerCase().includes(searchTerm.toLowerCase()) && 
+      if (searchTerm && !item.aiModel.toLowerCase().includes(searchTerm.toLowerCase()) && 
           !item.pair.toLowerCase().includes(searchTerm.toLowerCase())) {
         return false;
       }
       
       // Model filter
-      if (selectedModel !== 'all' && item.model !== selectedModel) {
+      if (selectedModel !== 'all' && item.aiModel !== selectedModel) {
         return false;
       }
       
@@ -121,7 +46,7 @@ export default function HistoryContainer() {
       
       // Time range filter
       const now = new Date();
-      const itemTime = new Date(item.timestamp);
+      const itemTime = new Date(item.timestamp); // Already in milliseconds
       let cutoffTime = new Date();
       
       switch (timeRange) {
@@ -140,11 +65,12 @@ export default function HistoryContainer() {
       
       return itemTime >= cutoffTime;
     });
-  }, [historyData, searchTerm, selectedModel, selectedAction, selectedStatus, timeRange]);
+  }, [trades, searchTerm, selectedModel, selectedAction, selectedStatus, timeRange]);
   
-  const formatTimestamp = (timestamp: Date) => {
+  const formatTimestamp = (timestamp: number) => {
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+    const itemTime = new Date(timestamp); // Already in milliseconds
+    const diff = now.getTime() - itemTime.getTime();
     const minutes = Math.floor(diff / (1000 * 60));
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -175,9 +101,18 @@ export default function HistoryContainer() {
   };
   
   const stats = useMemo(() => {
+    if (!filteredHistory.length) {
+      return {
+        total: 0,
+        profitable: 0,
+        totalPnL: 0,
+        winRate: 0,
+      };
+    }
+    
     const total = filteredHistory.length;
-    const profitable = filteredHistory.filter(item => item.pnl > 0).length;
-    const totalPnL = filteredHistory.reduce((sum, item) => sum + item.pnl, 0);
+    const profitable = filteredHistory.filter(item => (item.pnl || 0) > 0).length;
+    const totalPnL = filteredHistory.reduce((sum, item) => sum + (item.pnl || 0), 0);
     const winRate = total > 0 ? (profitable / total) * 100 : 0;
     
     return {
@@ -187,6 +122,18 @@ export default function HistoryContainer() {
       winRate,
     };
   }, [filteredHistory]);
+
+  if (!account) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
+          <p className="text-gray-400 mb-6">Please connect your Sui wallet to view trading history</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -266,7 +213,7 @@ export default function HistoryContainer() {
           <div className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4 text-center">
             <TrendingUp className="w-6 h-6 text-[#ff00ff] mx-auto mb-2" />
             <p className={`text-2xl font-bold ${stats.totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {stats.totalPnL >= 0 ? '+' : ''}${stats.totalPnL}
+              {stats.totalPnL >= 0 ? '+' : ''}${stats.totalPnL.toFixed(2)}
             </p>
             <p className="text-xs text-gray-400">Total P&L</p>
           </div>
@@ -284,12 +231,20 @@ export default function HistoryContainer() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6 mb-8"
         >
-          <div className="flex items-center space-x-2 mb-4">
-            <Filter className="w-5 h-5 text-[#00ff88]" />
-            <h3 className="text-lg font-bold">Filters</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <Filter className="w-5 h-5 text-[#00ff88]" />
+              <h3 className="text-lg font-bold">Filters</h3>
+            </div>
+            <Link
+              href="/season"
+              className="px-4 py-2 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all text-sm"
+            >
+              View Seasons
+            </Link>
           </div>
           
-          <div className="grid grid-cols-5 gap-4">
+          <div className="grid grid-cols-6 gap-4">
             {/* Search */}
             <div className="col-span-2">
               <div className="relative">
@@ -303,6 +258,19 @@ export default function HistoryContainer() {
                 />
               </div>
             </div>
+            
+            {/* Season Filter */}
+            <select
+              value={selectedSeason || ''}
+              onChange={(e) => setSelectedSeason(e.target.value ? parseInt(e.target.value) : undefined)}
+              className="px-4 py-2 bg-black/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-[#00ff88] focus:ring-1 focus:ring-[#00ff88]"
+            >
+              <option value="">All Seasons</option>
+              <option value="1">Season 1</option>
+              <option value="2">Season 2</option>
+              <option value="3">Season 3</option>
+              <option value="4">Season 4</option>
+            </select>
             
             {/* Model Filter */}
             <select
@@ -359,137 +327,157 @@ export default function HistoryContainer() {
         </motion.div>
 
         {/* History List */}
-        <div className="space-y-4">
-          {filteredHistory.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.02 }}
-              className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-all"
-            >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center space-x-4">
-                  <div className="text-3xl">{getModelEmoji(item.model)}</div>
-                  <div>
-                    <div className="flex items-center space-x-3 mb-1">
-                      <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
-                        item.action === 'LONG' ? 'bg-green-500/20 text-green-400' :
-                        item.action === 'SHORT' ? 'bg-red-500/20 text-red-400' :
-                        'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {item.action}
-                      </span>
-                      <span className="font-bold text-lg">{item.pair}</span>
-                      <span className="text-sm text-gray-400">{item.leverage}</span>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm">
-                      <span className="text-gray-400 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {formatTimestamp(item.timestamp)}
-                      </span>
-                      <span className="font-semibold" style={{ color: getModelColor(item.model) }}>
-                        {item.model}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-lg ${
-                    item.status === 'active' ? 'bg-[#00d4ff]/20 text-[#00d4ff]' :
-                    item.pnl >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                  }`}>
-                    {item.status === 'active' ? (
-                      <>
-                        <Activity className="w-3 h-3" />
-                        <span className="text-xs font-bold">ACTIVE</span>
-                      </>
-                    ) : item.pnl >= 0 ? (
-                      <>
-                        <CheckCircle className="w-3 h-3" />
-                        <span className="text-xs font-bold">PROFIT</span>
-                      </>
-                    ) : (
-                      <>
-                        <XCircle className="w-3 h-3" />
-                        <span className="text-xs font-bold">LOSS</span>
-                      </>
-                    )}
-                  </div>
-                  <p className={`text-lg font-bold mt-2 ${item.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {item.pnl >= 0 ? '+' : ''}${item.pnl}
-                  </p>
-                </div>
-              </div>
-
-              {/* AI Reasoning */}
-              <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4 mb-4">
-                <div className="flex items-start space-x-3">
-                  <Brain className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-bold text-sm mb-2 text-purple-300">AI Reasoning:</h4>
-                    <p className="text-sm text-gray-300">{item.reasoning}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Trade Details */}
-              <div className="grid grid-cols-5 gap-4 mb-4">
-                <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Entry Price</p>
-                  <p className="font-bold">${item.entry}</p>
-                </div>
-                <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Current/Exit</p>
-                  <p className="font-bold">${item.current || item.exit}</p>
-                </div>
-                <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Amount</p>
-                  <p className="font-bold">${item.amount}</p>
-                </div>
-                <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">Confidence</p>
-                  <p className="font-bold text-[#00ff88]">{item.confidence}%</p>
-                </div>
-                <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
-                  <p className="text-xs text-gray-400 mb-1">P&L</p>
-                  <p className={`font-bold ${item.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {item.pnl >= 0 ? '+' : ''}${item.pnl}
-                  </p>
-                </div>
-              </div>
-
-              {/* Walrus Link */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-800">
-                <div className="flex items-center space-x-2 text-xs text-gray-400">
-                  <Shield className="w-3 h-3" />
-                  <span>Verified on Walrus</span>
-                  <span className="text-gray-600">•</span>
-                  <span className="font-mono">{item.id}</span>
-                </div>
-                <a
-                  href={item.walrusLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center space-x-1 text-xs text-[#00ff88] hover:text-[#00d4ff] transition-colors"
-                >
-                  <span>View on Walrus</span>
-                  <ExternalLink className="w-3 h-3" />
-                </a>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {filteredHistory.length === 0 && (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00ff88] mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading trading history...</p>
+          </div>
+        ) : filteredHistory.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-12"
+            className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-12 text-center"
           >
-            <p className="text-gray-400">No trading history found with the current filters.</p>
+            <div className="text-6xl mb-4">📈</div>
+            <h3 className="text-xl font-bold mb-2">No Trading History</h3>
+            <p className="text-gray-400 mb-6">
+              {selectedSeason ? `No trades found for Season ${selectedSeason}` : 'No trading history found with current filters'}
+            </p>
+            <Link
+              href="/season"
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
+            >
+              Explore Seasons
+            </Link>
           </motion.div>
+        ) : (
+          <div className="space-y-4">
+            {filteredHistory.map((item: TradeRecord, index: number) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.02 }}
+                className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6 hover:border-gray-700 transition-all"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-3xl">{getModelEmoji(item.aiModel)}</div>
+                    <div>
+                      <div className="flex items-center space-x-3 mb-1">
+                        <span className={`px-3 py-1 rounded-lg text-sm font-bold ${
+                          item.action === 'LONG' ? 'bg-green-500/20 text-green-400' :
+                          item.action === 'SHORT' ? 'bg-red-500/20 text-red-400' :
+                          'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {item.action}
+                        </span>
+                        <span className="font-bold text-lg">{item.pair}</span>
+                        <span className="px-2 py-1 text-xs font-medium bg-gray-800 rounded-lg">
+                          Season {item.seasonNumber}
+                        </span>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-lg bg-blue-500/20 text-blue-400`}>
+                          Active
+                        </span> 
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm">
+                        <span className="text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatTimestamp(item.timestamp)}
+                        </span>
+                        <span className="font-semibold" style={{ color: getModelColor(item.aiModel) }}>
+                          {item.aiModel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`inline-flex items-center space-x-1 px-3 py-1 rounded-lg ${
+                      item.status === 'active' ? 'bg-[#00d4ff]/20 text-[#00d4ff]' :
+                      (item.pnl || 0) >= 0 ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    }`}>
+                      {item.status === 'active' ? (
+                        <>
+                          <Activity className="w-3 h-3" />
+                          <span className="text-xs font-bold">ACTIVE</span>
+                        </>
+                      ) : (item.pnl || 0) >= 0 ? (
+                        <>
+                          <CheckCircle className="w-3 h-3" />
+                          <span className="text-xs font-bold">PROFIT</span>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="w-3 h-3" />
+                          <span className="text-xs font-bold">LOSS</span>
+                        </>
+                      )}
+                    </div>
+                    <p className={`text-lg font-bold mt-2 ${(item.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {(item.pnl || 0) >= 0 ? '+' : ''}${(item.pnl || 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* AI Reasoning */}
+                <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-lg p-4 mb-4">
+                  <div className="flex items-start space-x-3">
+                    <Brain className="w-5 h-5 text-purple-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-bold text-sm mb-2 text-purple-300">AI Reasoning:</h4>
+                      <p className="text-sm text-gray-300">{item.reasoning}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Trade Details */}
+                <div className="grid grid-cols-5 gap-4 mb-4">
+                  <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Entry Price</p>
+                    <p className="font-bold">${item.entryPrice.toFixed(4)}</p>
+                  </div>
+                  <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Current/Exit</p>
+                    <p className="font-bold">${(item.exitPrice || item.entryPrice).toFixed(4)}</p>
+                  </div>
+                  <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Amount</p>
+                    <p className="font-bold">${item.usdcAmount.toFixed(2)}</p>
+                  </div>
+                  <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">Confidence</p>
+                    <p className="font-bold text-[#00ff88]">{item.confidence}%</p>
+                  </div>
+                  <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-400 mb-1">P&L</p>
+                    <p className={`font-bold ${(item.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {(item.pnl || 0) >= 0 ? '+' : ''}${(item.pnl || 0).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Walrus Link */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+                  <div className="flex items-center space-x-2 text-xs text-gray-400">
+                    <Shield className="w-3 h-3" />
+                    <span>Verified on Walrus</span>
+                    <span className="text-gray-600">•</span>
+                    <span className="font-mono">{item.walrusBlobId}</span>
+                  </div>
+                  <a
+                    href={`https://walrus.sui/blob/${item.walrusBlobId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center space-x-1 text-xs text-[#00ff88] hover:text-[#00d4ff] transition-colors"
+                  >
+                    <span>View on Walrus</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         )}
       </div>
     </div>

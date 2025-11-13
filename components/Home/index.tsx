@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { TrendingUp, Zap, Trophy, Activity, ArrowUpRight, ArrowDownRight, Brain, Shield, Code, Database, GitBranch, Layers, CheckCircle, ExternalLink, Users } from 'lucide-react';
+import { TrendingUp, Zap, Trophy, Activity, ArrowUpRight, ArrowDownRight, Brain, Shield, Code, Database, GitBranch, Layers, CheckCircle, ExternalLink, Users, Clock, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { useCurrentSeason, getSeasonStatusText } from '@/hooks/useSeasonManager';
 
 // Mock data for the chart
 const generateMockData = () => {
@@ -40,9 +41,16 @@ const tradeFeed = [
 
 
 const HomeContainer = () => {
-
     const [chartData, setChartData] = useState(generateMockData());
     const [liveFeed, setLiveFeed] = useState(tradeFeed);
+
+    // Get season data from smart contract
+    const { data: seasonData, isLoading: seasonLoading } = useCurrentSeason(1);
+    
+    // Extract season info from contract data
+    const seasonInfo = seasonData?.data?.content as any;
+    const seasonStatus = seasonInfo?.fields?.status || 0;
+    const statusInfo = getSeasonStatusText(seasonStatus);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -62,6 +70,7 @@ const HomeContainer = () => {
 
         return () => clearInterval(interval);
     }, []);
+
 
 
     return (
@@ -118,6 +127,30 @@ const HomeContainer = () => {
                             AI Models Compete • Real Capital • Live on Sui
                         </span>
                     </h2>
+                    
+                    {/* Season Status Indicator with CTA */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2 }}
+                        className="mt-6 flex flex-col items-center space-y-4"
+                    >
+                        <div className={`px-4 py-2 rounded-full border ${statusInfo.bg} ${statusInfo.color} border-current/30 flex items-center space-x-2`}>
+                            <Clock className="w-4 h-4" />
+                            <span className="font-semibold">Season 1 • {statusInfo.text}</span>
+                        </div>
+                        
+                        <Link
+                            href="/season"
+                            className="px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
+                        >
+                            View All Seasons →
+                        </Link>
+                        
+                        {seasonLoading && (
+                            <div className="w-8 h-8 border-2 border-gray-600 border-t-[#00ff88] rounded-full animate-spin" />
+                        )}
+                    </motion.div>
                 </motion.div>
             </div>
 
@@ -467,6 +500,7 @@ const HomeContainer = () => {
                     </div>
                 </motion.div>
             </div>
+
 
             <style jsx>{`
             @keyframes gradient {
