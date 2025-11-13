@@ -34,32 +34,50 @@ export async function getPoolInfo(
     }
 
     const content = result.data.content as any;
-    const pool = content.fields || {};
+    console.error("pool data :", content)
 
-    console.error("pool data :", pool)
-
-    if (!pool) {
-      throw new Error('USDC/BTC pool not found');
+    // The object is a dynamic_field::Field, so we need to access fields.value.fields
+    if (!content?.fields?.value?.fields) {
+      throw new Error('DEX pool object not found or has no content');
     }
 
-    const poolFields = pool.fields || {};
-    const usdcReserve = Number(poolFields.coin_x?.fields?.value || '0');
-    const btcReserve = Number(poolFields.coin_y?.fields?.value || '0');
-    const lpSupply = Number(poolFields.lp_supply?.fields?.value || '0');
-    const feePercent = Number(poolFields.fee_percent || '30'); // Default 0.3% = 30 basis points
-    const hasPaused = poolFields.has_paused || false;
+    const poolData = content.fields.value.fields;
+    const poolName = content.fields.name || 'UNKNOWN_POOL';
 
-    // Calculate current prices
-    const btcPerUsdc = btcReserve > 0 ? usdcReserve / btcReserve : 0;
-    const usdcPerBtc = usdcReserve > 0 ? btcReserve / usdcReserve : 0;
+    // Extract reserves directly (they are string values)
+    const usdcReserveRaw = Number(poolData.coin_x || '0');
+    const btcReserveRaw = Number(poolData.coin_y || '0');
+    
+    // Extract LP supply from nested structure
+    const lpSupply = Number(poolData.lp_supply?.fields?.value || '0');
+    
+    // Extract other fields
+    const feePercent = Number(poolData.fee_percent || '3'); // Default 0.3%
+    const hasPaused = poolData.has_paused || false;
+
+    // Adjust for decimal places (USDC: 6 decimals, BTC: 8 decimals)
+    const USDC_DECIMALS = 6;
+    const BTC_DECIMALS = 8;
+    
+    const usdcReserve = usdcReserveRaw / Math.pow(10, USDC_DECIMALS);
+    const btcReserve = btcReserveRaw / Math.pow(10, BTC_DECIMALS);
+
+    // Calculate current prices with proper decimal adjustment
+    // BTC per USDC: (USDC amount / 10^6) / (BTC amount / 10^8) = (USDC * 10^2) / BTC
+    const btcPerUsdc = btcReserve > 0 ? (usdcReserveRaw * Math.pow(10, BTC_DECIMALS - USDC_DECIMALS)) / btcReserveRaw : 0;
+    
+    // USDC per BTC: (BTC amount / 10^8) / (USDC amount / 10^6) = (BTC / 10^2) / USDC
+    const usdcPerBtc = usdcReserve > 0 ? (btcReserveRaw / Math.pow(10, BTC_DECIMALS - USDC_DECIMALS)) / usdcReserveRaw : 0;
 
     return {
       pool_address: params.dexGlobalId,
-      pool_name: "POOL_USDC_BTC",
-      usdc_reserve: usdcReserve,
-      btc_reserve: btcReserve,
+      pool_name: poolName,
+      usdc_reserve: usdcReserveRaw,
+      btc_reserve: btcReserveRaw,
+      usdc_reserve_adjusted: usdcReserve,
+      btc_reserve_adjusted: btcReserve,
       lp_supply: lpSupply,
-      fee_percentage: feePercent / 100, // Convert basis points to percentage
+      fee_percentage: feePercent / 1000, // Convert basis points to percentage
       is_paused: hasPaused,
       btc_per_usdc: btcPerUsdc,
       usdc_per_btc: usdcPerBtc,
@@ -87,9 +105,10 @@ export async function getSwapQuote(
       throw new Error('Pool is currently paused');
     }
 
+    // Use raw reserves for calculations (as they're in the same units as input amounts)
     const usdcReserve = poolInfo.usdc_reserve;
     const btcReserve = poolInfo.btc_reserve;
-    const feePercent = poolInfo.fee_percentage / 100; // Convert to decimal
+    const feePercent = poolInfo.fee_percentage; 
 
     let outputAmount: number;
     let priceImpact: number;
@@ -130,11 +149,16 @@ function calculateOutputAmount(
   inputReserve: number,
   outputReserve: number,
   feePercent: number
-): number {
+): number { 
+  // AMM formula: output = (input_amount * output_reserve * fee_multiplier) / (input_reserve + input_amount * fee_multiplier)
+  // where fee_multiplier = (10000 - fee_basis_points) / 10000
   const FEE_SCALING = 10000;
-  const inputAmountWithFee = inputAmount * (FEE_SCALING - feePercent * 100);
+  const feeBasisPoints = feePercent * 10000; // Convert percentage to basis points
+  const feeMultiplier = (FEE_SCALING - feeBasisPoints) / FEE_SCALING;
+  
+  const inputAmountWithFee = inputAmount * feeMultiplier;
   const numerator = inputAmountWithFee * outputReserve;
-  const denominator = (inputReserve * FEE_SCALING) + inputAmountWithFee;
+  const denominator = inputReserve + inputAmountWithFee;
   
   return Math.floor(numerator / denominator);
 }
