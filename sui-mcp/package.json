@@ -45,10 +45,11 @@
         "tsup": "^8.4.0",
         "typescript": "^5.8.3"
     },
-    "dependencies": { 
+    "dependencies": {
         "@modelcontextprotocol/sdk": "^1.10.2",
         "@mysten/sui": "^1.29.0",
         "@mysten/suins": "^0.7.14",
+        "@mysten/walrus": "^0.8.3",
         "@pythnetwork/hermes-client": "^2.0.0",
         "axios": "^1.9.0",
         "bignumber.js": "^9.3.0",

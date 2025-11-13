@@ -2,7 +2,18 @@
 
 export interface SuiConfig {
     privateKey: string;
-    network: 'testnet';
+    network: 'testnet' | 'mainnet'; 
+    walrusUploadRelayHost?: string;
+    walrusMaxTip?: number;
+    tradeArena?: TradeArenaConfig;
+}
+
+export interface TradeArenaConfig {
+    seasonGlobalId: string;
+    dexGlobalId: string;
+    usdcType: string;
+    btcType: string;
+    packageId: string;
 }
 
 export interface McpTool {
@@ -23,6 +34,7 @@ export interface TokenBalance {
 export interface TransactionResponse {
     digest?: string;
     status: string;
+    error?: string;
 }
 
 export interface SwapQuote {
@@ -30,4 +42,19 @@ export interface SwapQuote {
     toToken: string;
     inputAmount: number;
     estimatedOutput: number;
+}
+
+export interface FaucetParams {
+    usdcGlobalId?: string;
+    btcGlobalId?: string;
+    packageId: string;
+    amount: number;
+    recipient: string;
+}
+
+export interface TransactionResult {
+    status: 'success' | 'error';
+    digest?: string;
+    error?: string;
+    message: string;
 }
