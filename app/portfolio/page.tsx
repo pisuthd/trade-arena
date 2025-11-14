@@ -7,6 +7,9 @@ import { useUserPortfolio } from '@/hooks/useUserPortfolio';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { getSeasonStatusText } from '@/hooks/useSeasonManager';
 import { DataAdapter } from '@/data/dataAdapter';
+import { useWalletBalance } from '@/hooks/useWalletBalance';
+import { usePrice } from '@/hooks/usePrice';
+import { RefreshCw, Droplets } from 'lucide-react';
 import Link from 'next/link';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
@@ -27,6 +30,8 @@ export default function PortfolioPage() {
   });
 
   const portfolioData = useUserPortfolio();
+  const walletBalance = useWalletBalance();
+  const { formatUSD } = usePrice();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -288,64 +293,111 @@ export default function PortfolioPage() {
           </div>
         )}
 
-        {/* Quick Actions */}
+        {/* Wallet Balances */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           className="mt-8 bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6"
         >
-          <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold">Wallet Balances</h3>
+            <div className="flex items-center space-x-4">
+              {walletBalance.lastUpdated && (
+                <span className="text-sm text-gray-400">
+                  Updated {new Date(walletBalance.lastUpdated).toLocaleTimeString()}
+                </span>
+              )}
+              <button
+                onClick={walletBalance.fetchBalances}
+                disabled={walletBalance.loading}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${walletBalance.loading ? 'animate-spin' : ''}`} />
+                <span className="text-sm">Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          {walletBalance.error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+              <p className="text-red-400 text-sm">{walletBalance.error}</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Link
-              href="/season"
-              className="flex items-center justify-between p-4 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-[#00ff88]/20 rounded-lg flex items-center justify-center group-hover:bg-[#00ff88]/30 transition-colors">
-                  <DollarSign className="w-5 h-5 text-[#00ff88]" />
+            {/* SUI Balance */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">{walletBalance.getTokenBalanceInfo('SUI').emoji}</span>
+                  <span className="font-medium">SUI</span>
                 </div>
-                <div className="text-left">
-                  <p className="font-medium">Explore Seasons</p>
-                  <p className="text-sm text-gray-400">Find new AI competitions</p>
-                </div>
+                <span className="text-sm text-gray-400">Native</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-[#00ff88] transition-colors" />
-            </Link>
-            
-            <Link
-              href="/history"
-              className="flex items-center justify-between p-4 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center group-hover:bg-blue-500/30 transition-colors">
-                  <Activity className="w-5 h-5 text-blue-400" />
+              <p className="text-xl font-semibold mb-1">
+                {walletBalance.getTokenBalanceInfo('SUI').formattedAmount} SUI
+              </p>
+              <p className="text-sm text-gray-400">
+                {walletBalance.getTokenBalanceInfo('SUI').formattedUSD}
+              </p>
+            </div>
+
+            {/* USDC Balance */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">{walletBalance.getTokenBalanceInfo('USDC').emoji}</span>
+                  <span className="font-medium">USDC</span>
                 </div>
-                <div className="text-left">
-                  <p className="font-medium">Trade History</p>
-                  <p className="text-sm text-gray-400">View all AI trading activity</p>
-                </div>
+                <span className="text-sm text-gray-400">Stablecoin</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-400 transition-colors" />
-            </Link>
-            
-            <a
-              href="https://walrus.sui"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-between p-4 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                  <ExternalLink className="w-5 h-5 text-purple-400" />
+              <p className="text-xl font-semibold mb-1">
+                {walletBalance.getTokenBalanceInfo('USDC').formattedAmount} USDC
+              </p>
+              <p className="text-sm text-gray-400 mb-3">
+                {walletBalance.getTokenBalanceInfo('USDC').formattedUSD}
+              </p>
+              <button
+                onClick={walletBalance.requestMockUSDC}
+                disabled={walletBalance.faucetLoading}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-[#00ff88]/20 text-[#00ff88] hover:bg-[#00ff88]/30 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <Droplets className={`w-4 h-4 ${walletBalance.faucetLoading ? 'animate-pulse' : ''}`} />
+                <span className="text-sm font-medium">
+                  {walletBalance.faucetLoading ? 'Requesting...' : 'Get Mock USDC'}
+                </span>
+              </button>
+              {walletBalance.faucetError && (
+                <p className="mt-2 text-xs text-red-400">{walletBalance.faucetError}</p>
+              )}
+            </div>
+
+            {/* BTC Balance */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">{walletBalance.getTokenBalanceInfo('BTC').emoji}</span>
+                  <span className="font-medium">BTC</span>
                 </div>
-                <div className="text-left">
-                  <p className="font-medium">Walrus Verification</p>
-                  <p className="text-sm text-gray-400">Verify trades on-chain</p>
-                </div>
+                <span className="text-sm text-gray-400">Mock</span>
               </div>
-              <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
-            </a>
+              <p className="text-xl font-semibold mb-1">
+                {walletBalance.getTokenBalanceInfo('BTC').formattedAmount} BTC
+              </p>
+              <p className="text-sm text-gray-400">
+                {walletBalance.getTokenBalanceInfo('BTC').formattedUSD}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Total Wallet Value</span>
+              <span className="text-xl font-bold text-[#00ff88]">
+                {formatUSD(walletBalance.totalUSD)}
+              </span>
+            </div>
           </div>
         </motion.div>
       </div>

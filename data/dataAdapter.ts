@@ -13,9 +13,29 @@ import {
   generateMockSeasons,
   generateMockHistoricalTrades
 } from './mockData';
+import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
+import { Transaction } from '@mysten/sui/transactions';
 
 // Configuration flag for switching between mock and real data
 export const USE_MOCK_DATA = true;
+
+// Deployed contract addresses (Sui Testnet)
+export const CONTRACT_ADDRESSES = {
+  TRADE_ARENA_PACKAGE: '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f',
+  DEX_GLOBAL: '0xe01a60f171b371a10141476fe421c566bb21d52f1924797fcd44a07d9e9d355b',
+  SEASON_GLOBAL: '0x323afc98c387c70f9bc8528d7355aa7e520c352778c2406f15962f6e064bb9da',
+  USDC_GLOBAL: '0x1837c2490e780e27f3892ac5a30f241bd4081f80261815f2f381179176327fa1',
+  BTC_GLOBAL: '0x632832dd0857cd6edbdcff08a93b6e74d73ef7dabddf7d973c705d3fa31c26db',
+  MOCK_USDC_TYPE: '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_usdc::MOCK_USDC',
+  MOCK_BTC_TYPE: '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_btc::MOCK_BTC',
+} as const;
+
+// Wallet balance interface
+export interface WalletBalances {
+  SUI: number;
+  USDC: number;
+  BTC: number;
+}
 
 // Contract data interfaces (matching smart contract structure)
 export interface ContractVaultBalance {
@@ -51,6 +71,9 @@ export interface ContractTradeRecord {
   walrus_blob_id: number[];
 }
 
+// Sui client for blockchain interactions
+const suiClient = new SuiClient({ url: getFullnodeUrl('testnet') });
+
 // Data adapter class
 export class DataAdapter {
   static async getAIModels(): Promise<AIModel[]> {
@@ -60,7 +83,7 @@ export class DataAdapter {
     }
     
     // TODO: Implement real contract data fetching
-    // This would query the smart contract for AI model info
+    // This would query smart contract for AI model info
     return [];
   }
 
@@ -117,7 +140,7 @@ export class DataAdapter {
     }
     
     // TODO: Implement real contract data fetching
-    // This would query the season manager contract
+    // This would query season manager contract
     return null;
   }
 
@@ -132,7 +155,7 @@ export class DataAdapter {
     }
     
     // TODO: Implement real contract data fetching
-    // This would query the vault balance from contract
+    // This would query vault balance from contract
     return null;
   }
 
@@ -244,5 +267,109 @@ export class DataAdapter {
       'Claude Sonnet 4.5': '🧠',
       'Llama 4 Maverick 17B Instruct': '🦙',
     });
+  }
+
+  // Real wallet balance fetching from Sui blockchain
+  static async getWalletBalances(address: string): Promise<WalletBalances> { 
+    
+    try {
+      // Fetch SUI balance
+      const suiBalance = await suiClient.getBalance({
+        owner: address,
+        coinType: '0x2::sui::SUI'
+      });
+
+      // Fetch USDC balance
+      let usdcBalance = { totalBalance: '0' };
+      try {
+        usdcBalance = await suiClient.getBalance({
+          owner: address,
+          coinType: CONTRACT_ADDRESSES.MOCK_USDC_TYPE
+        });
+      } catch (error) {
+        // USDC might not exist, balance is 0
+      }
+
+      // Fetch BTC balance
+      let btcBalance = { totalBalance: '0' };
+      try {
+        btcBalance = await suiClient.getBalance({
+          owner: address,
+          coinType: CONTRACT_ADDRESSES.MOCK_BTC_TYPE
+        });
+      } catch (error) {
+        // BTC might not exist, balance is 0
+      }
+
+      return {
+        SUI: Number(suiBalance.totalBalance),
+        USDC: Number(usdcBalance.totalBalance),
+        BTC: Number(btcBalance.totalBalance),
+      };
+    } catch (error) {
+      console.error('Error fetching wallet balances:', error);
+      return {
+        SUI: 0,
+        USDC: 0,
+        BTC: 0,
+      };
+    }
+  }
+
+  // Real USDC faucet implementation
+  static async requestMockUSDC(address: string, signAndExecuteTransaction?: any): Promise<boolean> {
+     
+    
+    if (!signAndExecuteTransaction) {
+      throw new Error('signAndExecuteTransaction function is required for real faucet requests');
+    }
+    
+    try {
+      console.log(`Requesting real mock USDC for address: ${address}`);
+      
+      // Create transaction to mint USDC
+      const tx = new Transaction();
+      tx.setGasBudget(10000000); // 0.01 SUI gas budget
+      
+      // Call the mint function from mock_usdc contract
+      tx.moveCall({
+        target: `${CONTRACT_ADDRESSES.TRADE_ARENA_PACKAGE}::mock_usdc::mint`,
+        arguments: [
+          tx.object(CONTRACT_ADDRESSES.USDC_GLOBAL), // USDC global object
+          tx.pure.u64(1000000000), // 1000 USDC (6 decimals)
+          tx.pure.address(address), // recipient address
+        ]
+      });
+
+      // Execute transaction using dapp-kit
+      const result = await signAndExecuteTransaction({
+        transaction: tx,
+        options: {
+          showEffects: true,
+          showEvents: true,
+        },
+      });
+
+      console.log('USDC faucet transaction result:', result);
+      
+      // Check if transaction was successful
+      if (result.effects?.status?.status === 'success') {
+        console.log('Successfully minted 1000 USDC');
+        return true;
+      } else {
+        console.error('USDC faucet transaction failed:', result.effects?.status?.error);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to request mock USDC:', error);
+      return false;
+    }
+  }
+
+  // Helper method to set mock data mode
+  static setUseMockData(useMock: boolean) {
+    // This would be implemented to dynamically switch between mock and real data
+    // For now, it's controlled by the USE_MOCK_DATA constant
+    console.log(`Data adapter mode: ${useMock ? 'MOCK' : 'REAL'}`);
   }
 }
