@@ -6,70 +6,62 @@ import { TrendingUp, Zap, Trophy, Activity, ArrowUpRight, ArrowDownRight, Brain,
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useCurrentSeason, getSeasonStatusText } from '@/hooks/useSeasonManager';
-
-// Mock data for the chart
-const generateMockData = () => {
-    const data = [];
-    let baseValue = 10000;
-    for (let i = 0; i < 20; i++) {
-        data.push({
-            time: `${i}h`,
-            Claude: baseValue + Math.random() * 2000 - 500,
-            DeepSeek: baseValue + Math.random() * 3000 - 1000,
-            GPT4: baseValue + Math.random() * 2500 - 800,
-            Gemini: baseValue + Math.random() * 1800 - 600,
-        });
-        baseValue += Math.random() * 200 - 100;
-    }
-    return data;
-};
-
-const aiModels = [
-    { name: 'DeepSeek', value: 13830, change: 38.3, color: '#00ff88' },
-    { name: 'Claude', value: 12450, change: 24.5, color: '#00d4ff' },
-    { name: 'GPT-4', value: 11200, change: 12.0, color: '#ff00ff' },
-    { name: 'Gemini', value: 9100, change: -9.0, color: '#ff6b00' },
-];
-
-const tradeFeed = [
-    { id: 1, ai: 'DeepSeek', action: 'BUY', pair: 'SUI/USDT', amount: '500', confidence: 85, time: '2s ago' },
-    { id: 2, ai: 'Claude', action: 'TAKE PROFIT', pair: 'KAIA/USDT', amount: '300', confidence: 72, time: '8s ago' },
-    { id: 3, ai: 'GPT-4', action: 'ADD LIQUIDITY', pair: 'SUI/USDT', amount: '450', confidence: 68, time: '15s ago' },
-    { id: 4, ai: 'DeepSeek', action: 'BUY', pair: 'BTC/USDT', amount: '750', confidence: 91, time: '23s ago' },
-    { id: 5, ai: 'Gemini', action: 'SELL', pair: 'ETH/USDT', amount: '200', confidence: 55, time: '31s ago' },
-];
-
+import { DataAdapter } from '@/data/dataAdapter';
+import { Trade, VaultValue, AIModel } from '@/data/mockData';
 
 const HomeContainer = () => {
-    const [chartData, setChartData] = useState(generateMockData());
-    const [liveFeed, setLiveFeed] = useState(tradeFeed);
+    const [chartData, setChartData] = useState<VaultValue[]>([]);
+    const [liveFeed, setLiveFeed] = useState<Trade[]>([]);
+    const [aiModels, setAiModels] = useState<AIModel[]>([]);
+    const [loading, setLoading] = useState(true);
 
     // Get season data from smart contract
     const { data: seasonData, isLoading: seasonLoading } = useCurrentSeason(1);
-    
+
     // Extract season info from contract data
     const seasonInfo = seasonData?.data?.content as any;
     const seasonStatus = seasonInfo?.fields?.status || 0;
     const statusInfo = getSeasonStatusText(seasonStatus);
 
+    // Initialize data
     useEffect(() => {
-        const interval = setInterval(() => {
-            setLiveFeed(prev => {
-                const newTrade = {
-                    id: Date.now(),
-                    ai: aiModels[Math.floor(Math.random() * aiModels.length)].name,
-                    action: ['BUY', 'SELL', 'TAKE PROFIT', 'ADD LIQUIDITY'][Math.floor(Math.random() * 4)],
-                    pair: ['SUI/USDT', 'KAIA/USDT', 'BTC/USDT', 'ETH/USDT'][Math.floor(Math.random() * 4)],
-                    amount: String(Math.floor(Math.random() * 800 + 200)),
-                    confidence: Math.floor(Math.random() * 40 + 60),
-                    time: 'just now'
-                };
-                return [newTrade, ...prev.slice(0, 4)];
-            });
+        const initializeData = async () => {
+            try {
+                setLoading(true);
+                const [models, chart, trades] = await Promise.all([
+                    DataAdapter.getAIModels(),
+                    DataAdapter.getChartData(),
+                    DataAdapter.getTradeFeed()
+                ]);
+                
+                setAiModels(models);
+                setChartData(chart);
+                setLiveFeed(trades);
+            } catch (error) {
+                console.error('Failed to initialize data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeData();
+    }, []);
+
+    // Simulate live trade updates
+    useEffect(() => {
+        if (loading) return;
+        
+        const interval = setInterval(async () => {
+            try {
+                const newTrade = await DataAdapter.generateNewTrade();
+                setLiveFeed(prev => [newTrade, ...prev.slice(0, 4)]);
+            } catch (error) {
+                console.error('Failed to generate new trade:', error);
+            }
         }, 3000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [loading]);
 
 
 
@@ -126,38 +118,14 @@ const HomeContainer = () => {
                         <span className="bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#00ff88] bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
                             AI Models Compete • Real Capital • Live on Sui
                         </span>
-                    </h2>
-                    
-                    {/* Season Status Indicator with CTA */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="mt-6 flex flex-col items-center space-y-4"
-                    >
-                        <div className={`px-4 py-2 rounded-full border ${statusInfo.bg} ${statusInfo.color} border-current/30 flex items-center space-x-2`}>
-                            <Clock className="w-4 h-4" />
-                            <span className="font-semibold">Season 1 • {statusInfo.text}</span>
-                        </div>
-                        
-                        <Link
-                            href="/season"
-                            className="px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
-                        >
-                            View All Seasons →
-                        </Link>
-                        
-                        {seasonLoading && (
-                            <div className="w-8 h-8 border-2 border-gray-600 border-t-[#00ff88] rounded-full animate-spin" />
-                        )}
-                    </motion.div>
+                    </h2> 
                 </motion.div>
             </div>
 
             {/* Main Content - Chart and Feed */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 pb-8">
                 {/* AI Model Stats - Compact Row */}
-                <div className="grid grid-cols-4 gap-3 mb-6">
+                <div className="grid grid-cols-3 gap-3 mb-6">
                     {aiModels.map((model, index) => (
                         <motion.div
                             key={model.name}
@@ -216,10 +184,9 @@ const HomeContainer = () => {
                                     }}
                                 />
                                 <Legend />
-                                <Line type="monotone" dataKey="DeepSeek" stroke="#00ff88" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="Claude" stroke="#00d4ff" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="GPT4" stroke="#ff00ff" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="Gemini" stroke="#ff6b00" strokeWidth={2} dot={false} />
+                                <Line type="monotone" dataKey="AmazonNovaPro" stroke="#00ff88" strokeWidth={2} dot={false} />
+                                <Line type="monotone" dataKey="ClaudeSonnet" stroke="#00d4ff" strokeWidth={2} dot={false} />
+                                <Line type="monotone" dataKey="LlamaMaverick" stroke="#ff00ff" strokeWidth={2} dot={false} />
                             </LineChart>
                         </ResponsiveContainer>
                     </motion.div>
@@ -250,10 +217,10 @@ const HomeContainer = () => {
                                     <div className="flex items-center justify-between mb-2">
                                         <span className="text-xs font-bold text-gray-300">{trade.ai}</span>
                                         <span className={`text-xs px-2 py-0.5 rounded ${trade.action === 'BUY' ? 'bg-green-500/20 text-green-400' :
-                                                trade.action === 'SELL' ? 'bg-red-500/20 text-red-400' :
+                                            trade.action === 'SELL' ? 'bg-red-500/20 text-red-400' :
                                                 trade.action === 'TAKE PROFIT' ? 'bg-blue-500/20 text-blue-400' :
-                                                trade.action === 'ADD LIQUIDITY' ? 'bg-purple-500/20 text-purple-400' :
-                                                    'bg-gray-500/20 text-gray-400'
+                                                    trade.action === 'ADD LIQUIDITY' ? 'bg-purple-500/20 text-purple-400' :
+                                                        'bg-gray-500/20 text-gray-400'
                                             }`}>
                                             {trade.action}
                                         </span>
@@ -264,8 +231,12 @@ const HomeContainer = () => {
                                             <span className="text-white">{trade.pair}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span>Amount:</span>
-                                            <span className="text-white">${trade.amount}</span>
+                                            <span>USDC:</span>
+                                            <span className="text-white">${trade.usdcAmount.toLocaleString()}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span>BTC:</span>
+                                            <span className="text-white">{trade.btcAmount.toFixed(6)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span>Confidence:</span>
@@ -290,23 +261,26 @@ const HomeContainer = () => {
                 >
                     <div className="grid grid-cols-4 gap-4 text-center">
                         <div>
-                            <p className="text-xs text-gray-400 mb-1">Total Capital</p>
-                            <p className="text-xl font-bold text-[#00ff88]">$60,000</p>
+                            <p className="text-xs text-gray-400 mb-1">Season</p>
+                            <p className="text-xl font-bold text-[#ff00ff]">1</p>
                         </div>
                         <div>
                             <p className="text-xs text-gray-400 mb-1">Active Trades</p>
                             <p className="text-xl font-bold text-[#00d4ff]">24</p>
                         </div>
                         <div>
-                            <p className="text-xs text-gray-400 mb-1">Avg Return</p>
-                            <p className="text-xl font-bold text-[#ff00ff]">+16.4%</p>
+                            <p className="text-xs text-gray-400 mb-1">Total Capital</p>
+                            <p className="text-xl font-bold text-[#00ff88]">$60,000</p>
                         </div>
+
                         <div>
                             <p className="text-xs text-gray-400 mb-1">Time Left</p>
                             <p className="text-xl font-bold text-white">5d 14h</p>
                         </div>
                     </div>
                 </motion.div>
+
+                
 
                 {/* About Section - Merged from About Page */}
                 <motion.div
@@ -323,9 +297,23 @@ const HomeContainer = () => {
                         </span>
                     </h3>
                     <p className="text-xl text-gray-400 leading-relaxed max-w-4xl mx-auto mb-12">
-                        The world's first platform where AI models compete with real capital while every decision is 
+                        The world's first platform where AI models compete with real capital while every decision is
                         permanently verified on Walrus. No black boxes. No fake results. Just pure, provable AI performance.
                     </p>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="mt-6 flex flex-col items-center space-y-4"
+                >
+                    <Link
+                        href="/season"
+                        className="px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
+                    >
+                        View All Seasons →
+                    </Link>
                 </motion.div>
 
                 {/* Features Grid */}

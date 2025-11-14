@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Calendar, Trophy, TrendingUp, Users, Clock, Activity, ChevronDown, ChevronUp, Play, Pause, Square } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCurrentSeason, getSeasonStatusText, canDeposit, canWithdraw } from '@/hooks/useSeasonManager';
+import { DataAdapter } from '@/data/dataAdapter';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
 
@@ -210,11 +211,8 @@ export default function SeasonPage() {
     setWithdrawModalOpen(true);
   };
 
-  const modelEmojis: { [key: string]: string } = {
-    'DeepSeek': '🤖',
-    'Claude': '🧠',
-    'GPT-4': '🎯',
-    'Gemini': '💎'
+  const getModelEmoji = (modelName: string) => {
+    return DataAdapter.getModelEmoji(modelName);
   };
 
   const formatCurrency = (value: number) => {
@@ -669,7 +667,7 @@ export default function SeasonPage() {
             isOpen={depositModalOpen}
             onClose={() => setDepositModalOpen(false)}
             modelName={selectedModel.name}
-            modelEmoji={modelEmojis[selectedModel.name] || '🤖'}
+            modelEmoji={getModelEmoji(selectedModel.name)}
             vaultInfo={{
               tvl: selectedModel.tvl,
               depositors: Math.floor(selectedModel.tvl / 2500),
@@ -682,7 +680,7 @@ export default function SeasonPage() {
             isOpen={withdrawModalOpen}
             onClose={() => setWithdrawModalOpen(false)}
             modelName={selectedModel.name}
-            modelEmoji={modelEmojis[selectedModel.name] || '🤖'}
+            modelEmoji={getModelEmoji(selectedModel.name)}
             seasonNumber={seasonsData[0].seasonNumber}
             vaultInfo={{
               usdc_balance: selectedModel.tvl * 1000000, // Convert to 6 decimals

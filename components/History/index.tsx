@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useTradeHistory, TradeRecord } from '@/hooks/useTradeHistory';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { getSeasonStatusText } from '@/hooks/useSeasonManager';
+import { DataAdapter } from '@/data/dataAdapter';
 import Link from 'next/link';
 
 export default function HistoryContainer() {
@@ -81,23 +82,11 @@ export default function HistoryContainer() {
   };
   
   const getModelEmoji = (model: string) => {
-    const emojis = {
-      'DeepSeek': '🚀',
-      'Claude': '🧠',
-      'GPT-4': '⚡',
-      'Gemini': '💎',
-    };
-    return emojis[model as keyof typeof emojis] || '🤖';
+    return DataAdapter.getModelEmoji(model);
   };
   
   const getModelColor = (model: string) => {
-    const colors = {
-      'DeepSeek': '#00ff88',
-      'Claude': '#00d4ff',
-      'GPT-4': '#ff00ff',
-      'Gemini': '#ff6b00',
-    };
-    return colors[model as keyof typeof colors] || '#ffffff';
+    return DataAdapter.getModelColor(model);
   };
   
   const stats = useMemo(() => {
@@ -279,10 +268,9 @@ export default function HistoryContainer() {
               className="px-4 py-2 bg-black/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-[#00ff88] focus:ring-1 focus:ring-[#00ff88]"
             >
               <option value="all">All Models</option>
-              <option value="DeepSeek">DeepSeek</option>
-              <option value="Claude">Claude</option>
-              <option value="GPT-4">GPT-4</option>
-              <option value="Gemini">Gemini</option>
+              {DataAdapter.getAvailableModels().map(model => (
+                <option key={model} value={model}>{model}</option>
+              ))}
             </select>
             
             {/* Action Filter */}

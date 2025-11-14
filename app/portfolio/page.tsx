@@ -6,6 +6,7 @@ import { ArrowUpRight, ArrowDownRight, TrendingUp, TrendingDown, Wallet, DollarS
 import { useUserPortfolio } from '@/hooks/useUserPortfolio';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { getSeasonStatusText } from '@/hooks/useSeasonManager';
+import { DataAdapter } from '@/data/dataAdapter';
 import Link from 'next/link';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
@@ -25,7 +26,7 @@ export default function PortfolioPage() {
     seasonNumber: 0,
   });
 
-  const portfolioData = useUserPortfolio(selectedSeason);
+  const portfolioData = useUserPortfolio();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -37,23 +38,11 @@ export default function PortfolioPage() {
   };
 
   const getModelEmoji = (modelName: string) => {
-    const emojis: Record<string, string> = {
-      'DeepSeek': '🚀',
-      'Claude': '🧠',
-      'GPT-4': '⚡',
-      'Gemini': '💎',
-    };
-    return emojis[modelName] || '🤖';
+    return DataAdapter.getModelEmoji(modelName);
   };
 
   const getModelColor = (modelName: string) => {
-    const colors: Record<string, string> = {
-      'DeepSeek': '#00ff88',
-      'Claude': '#00d4ff',
-      'GPT-4': '#ff00ff',
-      'Gemini': '#ff6b00',
-    };
-    return colors[modelName] || '#ffffff';
+    return DataAdapter.getModelColor(modelName);
   };
 
   const openDepositModal = (aiName: string, seasonNumber: number) => {

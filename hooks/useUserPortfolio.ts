@@ -1,6 +1,9 @@
 "use client"
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useCurrentAccount } from '@mysten/dapp-kit';
+import { DataAdapter } from '@/data/dataAdapter';
+import { PortfolioHolding } from '@/data/mockData';
 
 export interface AIVault {
   aiModel: string;
@@ -25,173 +28,98 @@ export interface PortfolioData {
   btcBalance: number;
   btcValue: number;
   aiVaults: AIVault[];
-  holdings: any[];
+  holdings: PortfolioHolding[];
   isLoading: boolean;
   seasonNumber: number;
   seasonStatus: 'pre-season' | 'active' | 'post-season';
 } 
-// Mock data for development
-const mockPortfolioData: PortfolioData = {
-  totalValue: 12500,
-  totalProfit: 1250,
-  totalProfitPercentage: 11.1,
-  totalDeposited: 11250,
-  usdcBalance: 3200,
-  btcBalance: 0.234,
-  btcValue: 9300, // 0.234 BTC * $39,743 current price 
-  aiVaults: [ 
-    {
-      aiModel: 'Claude',
-      usdcAmount: 800,
-      btcAmount: 0.062,
-      totalValue: 3250,
-      pnl: 325,
-      pnlPercentage: 11.1,
-      activeTrades: 1,
-      totalTrades: 12,
-      winRate: 75.0,
-      lastTradeTime: Date.now() - 2 * 60 * 60 * 1000, // 2 hours ago
-      status: 'active'
-    },
-    {
-      aiModel: 'DeepSeek',
-      usdcAmount: 1200,
-      btcAmount: 0.089,
-      totalValue: 4750,
-      pnl: 475,
-      pnlPercentage: 11.1,
-      activeTrades: 0,
-      totalTrades: 8,
-      winRate: 62.5,
-      lastTradeTime: Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
-      status: 'active'
-    },
-    {
-      aiModel: 'GPT-4',
-      usdcAmount: 700,
-      btcAmount: 0.053,
-      totalValue: 2800,
-      pnl: 280,
-      pnlPercentage: 11.1,
-      activeTrades: 2,
-      totalTrades: 15,
-      winRate: 80.0,
-      lastTradeTime: Date.now() - 6 * 60 * 60 * 1000, // 6 hours ago
-      status: 'active'
-    },
-    {
-      aiModel: 'Gemini',
-      usdcAmount: 500,
-      btcAmount: 0.030,
-      totalValue: 1700,
-      pnl: 170,
-      pnlPercentage: 11.1,
-      activeTrades: 1,
-      totalTrades: 10,
-      winRate: 70.0,
-      lastTradeTime: Date.now() - 8 * 60 * 60 * 1000, // 8 hours ago
-      status: 'active'
-    }
-  ],
-  holdings: [
-    {
-      aiName: 'Claude',
-      seasonNumber: 1,
-      seasonStatus: 1, // active
-      lpShares: 1000000,
-      ownershipPercentage: 8.5,
-      usdcBalance: 800000000, // in smallest units
-      btcBalance: 62000000, // in smallest units
-      currentValue: 3250,
-      profit: 325
-    },
-    {
-      aiName: 'DeepSeek',
-      seasonNumber: 1,
-      seasonStatus: 1, // active
-      lpShares: 1500000,
-      ownershipPercentage: 12.8,
-      usdcBalance: 1200000000,
-      btcBalance: 89000000,
-      currentValue: 4750,
-      profit: 475
-    },
-    {
-      aiName: 'GPT-4',
-      seasonNumber: 1,
-      seasonStatus: 1, // active
-      lpShares: 800000,
-      ownershipPercentage: 6.8,
-      usdcBalance: 700000000,
-      btcBalance: 53000000,
-      currentValue: 2800,
-      profit: 280
-    },
-    {
-      aiName: 'Gemini',
-      seasonNumber: 1,
-      seasonStatus: 1, // active
-      lpShares: 600000,
-      ownershipPercentage: 5.1,
-      usdcBalance: 500000000,
-      btcBalance: 30000000,
-      currentValue: 1700,
-      profit: 170
-    }
-  ],
-  isLoading: false,
-  seasonNumber: 1,
-  seasonStatus: 'active'
-}; 
 
 export function useUserPortfolio(): PortfolioData {
+  const account = useCurrentAccount();
+  const [holdings, setHoldings] = useState<PortfolioHolding[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPortfolioData = async () => {
+      if (!account) {
+        setHoldings([]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const portfolioHoldings = await DataAdapter.getPortfolioHoldings();
+        setHoldings(portfolioHoldings);
+      } catch (error) {
+        console.error('Error fetching portfolio data:', error);
+        setHoldings([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPortfolioData();
+  }, [account]);
+
   const portfolioData = useMemo(() => {
-    // Simulate real-time updates by slightly modifying values
-    const currentTime = Date.now();
-    const updatedVaults = mockPortfolioData.aiVaults.map(vault => ({
-      ...vault,
-      // Add small random fluctuations to simulate market movements
-      totalValue: vault.totalValue + (Math.random() - 0.5) * 50,
-      pnl: vault.pnl + (Math.random() - 0.5) * 20,
-      pnlPercentage: vault.pnlPercentage + (Math.random() - 0.5) * 0.5,
+    // Calculate totals from holdings
+    const totalValue = holdings.reduce((sum, h) => sum + h.currentValue, 0);
+    const totalDeposited = holdings.reduce((sum, h) => sum + (h.currentValue - h.profit), 0);
+    const totalProfit = holdings.reduce((sum, h) => sum + h.profit, 0);
+    const totalProfitPercentage = totalDeposited > 0 ? (totalProfit / totalDeposited) * 100 : 0;
+    
+    const totalUSDC = holdings.reduce((sum, h) => sum + (h.usdcBalance / 1_000_000), 0);
+    const totalBTC = holdings.reduce((sum, h) => sum + (h.btcBalance / 1_000_000), 0);
+    const btcValue = totalBTC * 66000; // Mock BTC price
+
+    // Convert holdings to AI vaults format for compatibility
+    const aiVaults: AIVault[] = holdings.map(holding => ({
+      aiModel: holding.aiName,
+      usdcAmount: holding.usdcBalance / 1_000_000,
+      btcAmount: holding.btcBalance / 1_000_000,
+      totalValue: holding.currentValue,
+      pnl: holding.profit,
+      pnlPercentage: holding.currentValue > 0 ? (holding.profit / (holding.currentValue - holding.profit)) * 100 : 0,
+      activeTrades: Math.floor(Math.random() * 3), // Mock active trades
+      totalTrades: Math.floor(Math.random() * 20) + 5, // Mock total trades
+      winRate: 60 + Math.random() * 30, // Mock win rate
+      lastTradeTime: Date.now() - Math.random() * 24 * 60 * 60 * 1000, // Random time in last 24h
+      status: holding.seasonStatus === 1 ? 'active' : 'inactive'
     }));
 
-    const updatedTotalValue = updatedVaults.reduce((sum, vault) => sum + vault.totalValue, 0) + mockPortfolioData.usdcBalance;
-    const updatedTotalProfit = updatedVaults.reduce((sum, vault) => sum + vault.pnl, 0);
-    const updatedTotalProfitPercentage = updatedTotalProfit > 0 ? (updatedTotalProfit / (updatedTotalValue - updatedTotalProfit)) * 100 : 0;
+    // Determine current season status
+    const activeSeasons = holdings.filter(h => h.seasonStatus === 1);
+    const seasonStatus: 'pre-season' | 'active' | 'post-season' = activeSeasons.length > 0 ? 'active' : 'post-season';
+    const currentSeasonNumber = activeSeasons.length > 0 ? activeSeasons[0].seasonNumber : 1;
 
     return {
-      ...mockPortfolioData,
-      totalValue: updatedTotalValue,
-      totalProfit: updatedTotalProfit,
-      totalProfitPercentage: updatedTotalProfitPercentage,
-      aiVaults: updatedVaults,
+      totalValue,
+      totalProfit,
+      totalProfitPercentage,
+      totalDeposited,
+      usdcBalance: totalUSDC,
+      btcBalance: totalBTC,
+      btcValue,
+      aiVaults,
+      holdings,
+      isLoading,
+      seasonNumber: currentSeasonNumber,
+      seasonStatus,
     };
-  }, []); 
+  }, [holdings, isLoading]); 
 
   return portfolioData;
 }
 
 // Helper function to get AI model emoji
 export function getModelEmoji(model: string): string {
-  const emojis: Record<string, string> = {
-    'DeepSeek': '🚀',
-    'Claude': '🧠',
-    'GPT-4': '⚡',
-    'Gemini': '💎',
-  };
-  return emojis[model] || '🤖';
+  return DataAdapter.getModelEmoji(model);
 }
 
 // Helper function to get AI model color
 export function getModelColor(model: string): string {
-  const colors: Record<string, string> = {
-    'DeepSeek': '#00ff88',
-    'Claude': '#00d4ff',
-    'GPT-4': '#ff00ff',
-    'Gemini': '#ff6b00',
-  };
-  return colors[model] || '#ffffff';
+  return DataAdapter.getModelColor(model);
 }
 
 // Helper function to format currency
