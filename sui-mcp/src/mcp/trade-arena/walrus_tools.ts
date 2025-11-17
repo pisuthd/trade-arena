@@ -18,7 +18,7 @@ export const tradeArenaWalrusStoreTool: McpTool = {
     confidence: z.number().min(0).max(100).describe("Confidence level (0-100)"),
     season_number: z.number().describe("The season number"),
     market_snapshot: z.string().optional().describe("Optional market snapshot data as JSON string"),
-    epochs: z.number().min(1).default(15).describe("Number of epochs to store data (default: 15)")
+    epochs: z.number().min(1).default(2).describe("Number of epochs to store data (default: 2)")
   },
   handler: async (agent: Agent, input: Record<string, any>) => {
     try {
@@ -38,7 +38,7 @@ export const tradeArenaWalrusStoreTool: McpTool = {
       };
 
       const blobId = await agent.storeTradeData(tradeData, input.epochs);
-      
+
       return {
         success: true,
         data: {
@@ -68,7 +68,7 @@ export const tradeArenaWalrusRetrieveTool: McpTool = {
   handler: async (agent: Agent, input: Record<string, any>) => {
     try {
       const tradeData = await agent.getTradeData(input.blob_id);
-      
+
       return {
         success: true,
         data: {
@@ -82,32 +82,6 @@ export const tradeArenaWalrusRetrieveTool: McpTool = {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
         message: `Failed to retrieve trade data from Walrus blob: ${input.blob_id}`
-      };
-    }
-  }
-};
-
-// Get Blob Status Tool
-export const tradeArenaWalrusStatusTool: McpTool = {
-  name: 'trade_arena_walrus_status',
-  description: 'Get status and metadata of a Walrus blob',
-  schema: {
-    blob_id: z.string().describe("Walrus blob ID to get status for")
-  },
-  handler: async (agent: Agent, input: Record<string, any>) => {
-    try {
-      const blobStatus = await agent.getBlobStatus(input.blob_id);
-      
-      return {
-        success: true,
-        data: blobStatus,
-        message: `Retrieved status for Walrus blob: ${input.blob_id}`
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: `Failed to get status for Walrus blob: ${input.blob_id}`
       };
     }
   }

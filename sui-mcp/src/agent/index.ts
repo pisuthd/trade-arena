@@ -76,11 +76,7 @@ export class Agent {
     async getTradeData(blobId: string): Promise<any> {
         return this.walrusClient.getTradeData(blobId);
     }
-
-    async getBlobStatus(blobId: string): Promise<any> {
-        return this.walrusClient.getBlobStatus(blobId);
-    }
-
+ 
     async signAndExecuteTransaction(tx: Transaction) {
         const result = await this.client.signAndExecuteTransaction({
             signer: this.wallet,

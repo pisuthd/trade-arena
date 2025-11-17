@@ -21,8 +21,7 @@ import {
 } from "./trade-arena/season_tools";
 import {
     tradeArenaWalrusStoreTool,
-    tradeArenaWalrusRetrieveTool,
-    tradeArenaWalrusStatusTool
+    tradeArenaWalrusRetrieveTool
 } from "./trade-arena/walrus_tools";
 import {
     tradeArenaMintMockUsdcTool,
@@ -51,7 +50,6 @@ export const SuiMcpTools = {
     // Trade Arena Walrus Tools
     "tradeArenaWalrusStoreTool": tradeArenaWalrusStoreTool,
     "tradeArenaWalrusRetrieveTool": tradeArenaWalrusRetrieveTool,
-    "tradeArenaWalrusStatusTool": tradeArenaWalrusStatusTool,
     // Trade Arena Faucet Tools
     "tradeArenaMintMockUsdcTool": tradeArenaMintMockUsdcTool,
     "tradeArenaMintMockBtcTool": tradeArenaMintMockBtcTool,
