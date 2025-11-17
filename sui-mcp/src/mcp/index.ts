@@ -16,8 +16,7 @@ import {
 } from "./trade-arena/dex_tools";
 import {
     tradeArenaGetSeasonInfoTool,
-    tradeArenaGetCurrentSeasonTool,
-    tradeArenaGetAIModelsTool
+    tradeArenaGetCurrentSeasonTool
 } from "./trade-arena/season_tools";
 import {
     tradeArenaWalrusStoreTool,
@@ -46,7 +45,6 @@ export const SuiMcpTools = {
     // Trade Arena Season Tools
     "tradeArenaGetSeasonInfoTool": tradeArenaGetSeasonInfoTool,
     "tradeArenaGetCurrentSeasonTool": tradeArenaGetCurrentSeasonTool,
-    "tradeArenaGetAIModelsTool": tradeArenaGetAIModelsTool,
     // Trade Arena Walrus Tools
     "tradeArenaWalrusStoreTool": tradeArenaWalrusStoreTool,
     "tradeArenaWalrusRetrieveTool": tradeArenaWalrusRetrieveTool,
