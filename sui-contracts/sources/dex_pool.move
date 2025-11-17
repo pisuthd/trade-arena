@@ -1,8 +1,8 @@
-/// DEX Pool - Uniswap 50/50 style Automated Market Maker (AMM)
+/// DEX Pool - Uniswap 50/50 style AMM
 /// 
 /// This module implements a decentralized exchange pool following constant product AMM principles:
 /// Uses the standard x * y = k formula for fair and efficient trading.
-/// 
+///  
 /// Features:
 /// - Liquidity provision with LP tokens (LSP - Liquidity Share Pool)
 /// - Swapping between any two token types T1 and T2
@@ -16,22 +16,29 @@
 /// 
 /// LP tokens represent a share of the pool's total liquidity and can be redeemed
 /// for the underlying assets at any time.
+
 module trade_arena::dex_pool {
+
     use sui::coin::{Self, Coin};
     use sui::balance::{Self, Supply, Balance};
-    use std::{u64, string};
+    use std::{u64};
     use sui::object::{Self, ID, UID};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
     use sui::bag::{Self, Bag};
-    use sui::event::emit;
-    use std::string::String;
+    use sui::event::emit; 
+    use std::string::{Self, String}; 
+    use std::type_name::{get, into_string};
+    use std::ascii::into_bytes; 
+     
 
     const EZeroAmount: u64 = 0;
     const EWrongFee: u64 = 1;
     const EReservesEmpty: u64 = 2;
-    const ENotRegistered: u64 = 5;
-    const EPaused: u64 = 8;
+    const ENotRegistered: u64 = 3;
+    const EPaused: u64 = 4;
+    const ESameCoin: u64 = 5;
+    const ENotOrder: u64 = 6;
 
     const FEE_SCALING: u128 = 10000;
 
@@ -439,13 +446,13 @@ module trade_arena::dex_pool {
 
     /// Generate pool name from token types
     fun generate_pool_name<T1, T2>(): String {
-        let mut name = string::utf8(b"POOL_");
-        let type1_name = string::utf8(b"T1");
-        let type2_name = string::utf8(b"T2");
-        string::append(&mut name, type1_name);
-        string::append(&mut name, string::utf8(b"_"));
-        string::append(&mut name, type2_name);
-        name
+        let mut lp_name = string::utf8(b"");
+        string::append_utf8(&mut lp_name, b"LP-"); 
+        string::append_utf8(&mut lp_name, into_bytes(into_string(get<T1>())));
+        string::append_utf8(&mut lp_name, b"-");
+        string::append_utf8(&mut lp_name, into_bytes(into_string(get<T2>())));
+
+        lp_name
     }
 
     /// Get mutable pool reference
