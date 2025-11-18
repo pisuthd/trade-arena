@@ -66,6 +66,45 @@ const suiClient = new SuiClient({ url: getFullnodeUrl('testnet') });
 
 // Data adapter class
 export class DataAdapter {
+  // BTC price cache to avoid repeated API calls
+  private static btcPriceCache: number | null = null;
+  private static btcPriceCacheTime: number = 0;
+  private static readonly BTC_PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  // Fetch BTC price from API
+  private static async fetchBTCPrice(): Promise<number> {
+    // Check cache first
+    const now = Date.now();
+    if (this.btcPriceCache && (now - this.btcPriceCacheTime) < this.BTC_PRICE_CACHE_DURATION) {
+      return this.btcPriceCache;
+    }
+
+    try {
+      const response = await fetch('https://kvxdikvk5b.execute-api.ap-southeast-1.amazonaws.com/prod/prices');
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        const btcData = data.data.find((item: any) => item.symbol === 'BTC');
+        if (btcData) {
+          this.btcPriceCache = btcData.price;
+          this.btcPriceCacheTime = now;
+          console.log(`Fetched BTC price: $${btcData.price}`);
+          return btcData.price;
+        }
+      }
+      
+      throw new Error('BTC price not found in API response');
+    } catch (error) {
+      console.error('Error fetching BTC price:', error);
+      // Fallback to default price if API fails
+      return 95000;
+    }
+  }
+
+  // Public method to get current BTC price
+  static async getBTCPrice(): Promise<number> {
+    return this.fetchBTCPrice();
+  }
   static async getAIModels(): Promise<AIModel[]> {
     if (USE_MOCK_DATA) {
       const { AI_MODELS } = await import('./mockData');
@@ -196,8 +235,9 @@ export class DataAdapter {
     return [];
   }
 
-  static async getSeasons(): Promise<SeasonData[]> {
-
+  static async getSeasons(btcPriceOverride?: number): Promise<SeasonData[]> {
+    // Get BTC price (use override if provided, otherwise fetch from API)
+    const btcPrice = btcPriceOverride || await this.getBTCPrice();
 
     try {
       // Fetch season data from smart contract
@@ -228,7 +268,7 @@ export class DataAdapter {
 
         // Map status number to string
         let status: 'pre-season' | 'active' | 'ended' = 'pre-season';
-        switch (seasonData.status || 0) {
+        switch (seasonData.fields.status || 0) {
           case 0:
             status = 'pre-season';
             break;
@@ -239,6 +279,7 @@ export class DataAdapter {
             status = 'ended';
             break;
         }
+ 
  
         // Format AI models from vector
         const aiModels = seasonData.fields.ai_models || [];
@@ -258,7 +299,7 @@ export class DataAdapter {
         // Format AI vaults from VecMap<String, AIVault<String>>
         const aiVaults = seasonData.fields.ai_vaults || {};
         
-        console.log("AI Vaults structure:", JSON.stringify(aiVaults, null, 2));
+        // console.log("AI Vaults structure:", JSON.stringify(aiVaults, null, 2));
         
         // Handle both possible structures: direct contents or nested fields.contents
         let vaultContents = [];
@@ -277,13 +318,13 @@ export class DataAdapter {
           const vaultData = vault.fields.value;
           const modelIndex = formattedAIModels.findIndex((model: any) => model.name === aiName);
           if (modelIndex !== -1) {
-            // Access the nested fields structure correctly
+            // Access nested fields structure correctly
             const vaultFields = vaultData.fields || {};
             
             // Calculate TVL including both USDC and BTC
             const usdcValue = convertFromDecimals(Number(vaultFields.usdc_balance || 0), 'USDC');
             const btcAmount = convertFromDecimals(Number(vaultFields.btc_balance || 0), 'BTC');
-            const btcValueInUSDC = btcAmount * 100000; // 1 BTC = 100,000 USDC
+            const btcValueInUSDC = btcAmount * btcPrice; // Use dynamic BTC price
             formattedAIModels[modelIndex].tvl = usdcValue + btcValueInUSDC;
             
             console.log(`TVL for ${aiName}: USDC raw=${vaultFields.usdc_balance}, BTC raw=${vaultFields.btc_balance}`);
@@ -299,7 +340,7 @@ export class DataAdapter {
         console.log("Final TVL calculation:");
         console.log("Formatted AI Models:", formattedAIModels.map((m: any) => ({ name: m.name, tvl: m.tvl })));
         console.log("Total TVL:", totalTVL);
-        console.log("seasonData.fields:", seasonData.fields, new Date(Number(seasonData.fields.created_at)).toLocaleDateString())
+        console.log("seasonData.fields:", seasonData.fields)
 
         return {
           id: seasonNumber,
@@ -313,6 +354,10 @@ export class DataAdapter {
           totalTrades,
           totalVolume,
           aiModels: formattedAIModels,
+          // Include raw contract data for season page to access
+          rawContractData: {
+            fields: seasonData.fields
+          },
           metrics: {
             totalDepositors: vaultContents.length, // Approximate depositor count
             totalTVL,
@@ -475,7 +520,7 @@ export class DataAdapter {
       const tx = new Transaction();
       tx.setGasBudget(GAS_CONFIG.DEFAULT_BUDGET);
 
-      // Call the mint function from mock_usdc contract
+      // Call mint function from mock_usdc contract
       tx.moveCall({
         target: CONTRACT_TARGETS.MINT_USDC,
         arguments: [
@@ -497,7 +542,7 @@ export class DataAdapter {
       console.log('USDC faucet transaction result:', result);
 
       // Check transaction status - new version returns digest for successful transactions
-      // If there's a digest, the transaction was successful
+      // If there's a digest, transaction was successful
       if (result.digest) {
         console.log('Successfully minted 1000 USDC');
         return true;
