@@ -8,8 +8,7 @@ module trade_arena::dex_pool_tests {
     use trade_arena::mock_btc::{Self, MOCK_BTC};
 
     const USDC_AMT: u64 = 1000000; // 1 USDC (6 decimals)
-    const BTC_AMT: u64 = 100000000; // 1 BTC (8 decimals)
-    const WEIGHT_50_50: u64 = 5000; // 50% weight
+    const BTC_AMT: u64 = 100000000; // 1 BTC (8 decimals) 
     const FEE_3_BPS: u64 = 3; // 0.03% fee
 
     // Tests section
@@ -142,7 +141,7 @@ module trade_arena::dex_pool_tests {
 
         next_tx(test, owner);
         {
-            let mut global = test::take_shared<DEXGlobal>(test);
+            let global = test::take_shared<DEXGlobal>(test);
             let (amt_usdc, amt_btc, lsp_supply, _, _) = dex_pool::get_pool_info<MOCK_USDC, MOCK_BTC>(&global);
 
             assert!(lsp_supply > 9000000 && lsp_supply < 11000000, 0);
@@ -250,7 +249,7 @@ module trade_arena::dex_pool_tests {
         // Get the actual LSP supply first
         next_tx(test, owner);
         {
-            let mut global = test::take_shared<DEXGlobal>(test);
+            let global = test::take_shared<DEXGlobal>(test);
             let (_, _, lsp_supply, _, _) = dex_pool::get_pool_info<MOCK_USDC, MOCK_BTC>(&global);
             test::return_shared(global);
 
@@ -284,7 +283,7 @@ module trade_arena::dex_pool_tests {
         // Get the actual LSP supply first
         next_tx(test, owner);
         {
-            let mut global = test::take_shared<DEXGlobal>(test);
+            let global = test::take_shared<DEXGlobal>(test);
             let (_, _, lsp_supply, _, _) = dex_pool::get_pool_info<MOCK_USDC, MOCK_BTC>(&global);
             test::return_shared(global);
 
@@ -329,7 +328,7 @@ module trade_arena::dex_pool_tests {
 
     /// Test edge case: swapping with minimal liquidity
     fun test_empty_pool_swap_(_: &mut Scenario) {
-        let u64_max = 18446744073709551615;
+        let _u64_max = 18446744073709551615;
         
         // Test with very small reserves
         let input_amount = 1;

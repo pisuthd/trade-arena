@@ -22,6 +22,7 @@ export interface VaultValue {
 
 export interface AIModel {
   name: string;
+  displayName: string;
   value: number;
   change: number;
   color: string;
@@ -94,19 +95,22 @@ export interface HistoricalTrade {
 
 export const AI_MODELS: AIModel[] = [
   { 
-    name: 'Amazon Nova Pro', 
+    name: 'CLAUDE', 
+    displayName: 'Claude Sonnet 4.5',
     value: 13830, 
     change: 38.3, 
-    color: '#00ff88' 
-  },
-  { 
-    name: 'Claude Sonnet 4.5', 
-    value: 12450, 
-    change: 24.5, 
     color: '#00d4ff' 
   },
   { 
-    name: 'Llama 4 Maverick 17B Instruct', 
+    name: 'NOVA', 
+    displayName: 'Amazon Nova Pro',
+    value: 12450, 
+    change: 24.5, 
+    color: '#00ff88' 
+  },
+  { 
+    name: 'LLAMA', 
+    displayName: 'Llama 4 Maverick 17B Instruct',
     value: 11200, 
     change: 12.0, 
     color: '#ff00ff' 

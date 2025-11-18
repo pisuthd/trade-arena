@@ -1,13 +1,13 @@
 // Data adapter for switching between mock and real contract data
-import { 
-  Trade, 
-  VaultValue, 
-  AIModel, 
-  PortfolioHolding, 
-  SeasonData, 
+import {
+  Trade,
+  VaultValue,
+  AIModel,
+  PortfolioHolding,
+  SeasonData,
   HistoricalTrade,
-  INITIAL_TRADES, 
-  generateMockChartData, 
+  INITIAL_TRADES,
+  generateMockChartData,
   generateMockTrade,
   generateMockPortfolioHoldings,
   generateMockSeasons,
@@ -15,20 +15,10 @@ import {
 } from './mockData';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
+import { CONTRACT_ADDRESSES, CONTRACT_TARGETS, GAS_CONFIG, convertToDecimals, convertFromDecimals } from '../config/contracts';
 
 // Configuration flag for switching between mock and real data
-export const USE_MOCK_DATA = true;
-
-// Deployed contract addresses (Sui Testnet)
-export const CONTRACT_ADDRESSES = {
-  TRADE_ARENA_PACKAGE: '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f',
-  DEX_GLOBAL: '0xe01a60f171b371a10141476fe421c566bb21d52f1924797fcd44a07d9e9d355b',
-  SEASON_GLOBAL: '0x323afc98c387c70f9bc8528d7355aa7e520c352778c2406f15962f6e064bb9da',
-  USDC_GLOBAL: '0x1837c2490e780e27f3892ac5a30f241bd4081f80261815f2f381179176327fa1',
-  BTC_GLOBAL: '0x632832dd0857cd6edbdcff08a93b6e74d73ef7dabddf7d973c705d3fa31c26db',
-  MOCK_USDC_TYPE: '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_usdc::MOCK_USDC',
-  MOCK_BTC_TYPE: '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_btc::MOCK_BTC',
-} as const;
+export const USE_MOCK_DATA = false;
 
 // Wallet balance interface
 export interface WalletBalances {
@@ -81,7 +71,7 @@ export class DataAdapter {
       const { AI_MODELS } = await import('./mockData');
       return AI_MODELS;
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would query smart contract for AI model info
     return [];
@@ -92,7 +82,7 @@ export class DataAdapter {
       const { generateMockChartData } = await import('./mockData');
       return generateMockChartData();
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would query vault balances over time from contract
     return [];
@@ -103,7 +93,7 @@ export class DataAdapter {
       const { INITIAL_TRADES } = await import('./mockData');
       return INITIAL_TRADES;
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would query trade history from contract events
     return [];
@@ -114,7 +104,7 @@ export class DataAdapter {
       const { generateMockTrade } = await import('./mockData');
       return generateMockTrade();
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would listen to real-time trade events
     throw new Error('Real-time trade generation not implemented for contract data');
@@ -138,7 +128,7 @@ export class DataAdapter {
         total_volume: 15000000, // 15 USDC (6 decimals)
       };
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would query season manager contract
     return null;
@@ -153,7 +143,7 @@ export class DataAdapter {
         lp_supply: 1000000, // 1 LP token
       };
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would query vault balance from contract
     return null;
@@ -179,7 +169,7 @@ export class DataAdapter {
   static formatTime(timestamp: number): string {
     const now = Date.now();
     const diff = now - timestamp;
-    
+
     if (diff < 60000) return 'just now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
@@ -188,11 +178,11 @@ export class DataAdapter {
 
   // Helper function to convert contract amounts to display format
   static formatUSDC(amount: number): string {
-    return (amount / 1_000_000).toFixed(2);
+    return convertFromDecimals(amount, 'USDC').toFixed(2);
   }
 
   static formatBTC(amount: number): string {
-    return (amount / 1_000_000_000).toFixed(8);
+    return convertFromDecimals(amount, 'BTC').toFixed(8);
   }
 
   // New methods for portfolio, seasons, and historical trades
@@ -200,27 +190,156 @@ export class DataAdapter {
     if (USE_MOCK_DATA) {
       return generateMockPortfolioHoldings(seasonNumber);
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would query user's vault holdings from contract
     return [];
   }
 
   static async getSeasons(): Promise<SeasonData[]> {
-    if (USE_MOCK_DATA) {
-      return generateMockSeasons();
+
+
+    try {
+      // Fetch season data from smart contract
+      const result = await suiClient.getObject({
+        id: CONTRACT_ADDRESSES.SEASON_GLOBAL,
+        options: {
+          showContent: true,
+          showType: true,
+        },
+      });
+ 
+
+      if (!result.data?.content) {
+        throw new Error('Season object not found or has no content');
+      }
+
+      const content = result.data.content as any;
+      const fields = content.fields || {};
+
+      // seasons is a VecMap<u64, Season>, need to access it properly
+      const seasonsVecMap = fields.seasons || {};
+      const seasonsContents = seasonsVecMap.fields.contents || []; // Get the actual map data as array
+
+      // Convert contract data to UI format
+      const seasons: SeasonData[] = seasonsContents.map((entry: any) => {
+        const seasonNumber = parseInt(entry.fields.key);
+        const seasonData = entry.fields.value || {};
+
+        // Map status number to string
+        let status: 'pre-season' | 'active' | 'ended' = 'pre-season';
+        switch (seasonData.status || 0) {
+          case 0:
+            status = 'pre-season';
+            break;
+          case 1:
+            status = 'active';
+            break;
+          case 2:
+            status = 'ended';
+            break;
+        }
+ 
+        // Format AI models from vector
+        const aiModels = seasonData.fields.ai_models || [];
+        const formattedAIModels = aiModels.map((model: any) => {
+          const modelFields = model.fields || model;
+          return {
+            name: modelFields.name || '',
+            wallet_address: modelFields.wallet_address || '',
+            status: status === 'ended' ? 'completed' :
+              status === 'active' ? 'active' : 'registered',
+            tvl: 0, // Will be populated from vault data
+            trades: 0, // Will be populated from trade history
+            pnl: 0, // Will be calculated from vault performance
+          };
+        });
+ 
+        // Format AI vaults from VecMap<String, AIVault<String>>
+        const aiVaults = seasonData.fields.ai_vaults || {};
+        
+        console.log("AI Vaults structure:", JSON.stringify(aiVaults, null, 2));
+        
+        // Handle both possible structures: direct contents or nested fields.contents
+        let vaultContents = [];
+        if (aiVaults.contents) {
+          vaultContents = aiVaults.contents;
+        } else if (aiVaults.fields && aiVaults.fields.contents) {
+          vaultContents = aiVaults.fields.contents;
+        } 
+        
+        console.log("Vault contents found:", vaultContents.length, "vaults");
+
+
+        // Update TVL for each AI model from vault data
+        vaultContents.forEach((vault: any) => { 
+          const aiName = vault.fields.key;
+          const vaultData = vault.fields.value;
+          const modelIndex = formattedAIModels.findIndex((model: any) => model.name === aiName);
+          if (modelIndex !== -1) {
+            // Access the nested fields structure correctly
+            const vaultFields = vaultData.fields || {};
+            
+            // Calculate TVL including both USDC and BTC
+            const usdcValue = convertFromDecimals(Number(vaultFields.usdc_balance || 0), 'USDC');
+            const btcAmount = convertFromDecimals(Number(vaultFields.btc_balance || 0), 'BTC');
+            const btcValueInUSDC = btcAmount * 100000; // 1 BTC = 100,000 USDC
+            formattedAIModels[modelIndex].tvl = usdcValue + btcValueInUSDC;
+            
+            console.log(`TVL for ${aiName}: USDC raw=${vaultFields.usdc_balance}, BTC raw=${vaultFields.btc_balance}`);
+            console.log(`TVL for ${aiName}: USDC=${usdcValue}, BTC=${btcAmount}, BTC Value=${btcValueInUSDC}, Total=${formattedAIModels[modelIndex].tvl}`);
+          }
+        });
+
+        // Calculate metrics
+        const totalTVL = formattedAIModels.reduce((sum: number, model: any) => sum + model.tvl, 0);
+        const totalTrades = seasonData.total_trades || 0;
+        const totalVolume = convertFromDecimals(Number(seasonData.total_volume || 0), 'USDC');
+
+        console.log("Final TVL calculation:");
+        console.log("Formatted AI Models:", formattedAIModels.map((m: any) => ({ name: m.name, tvl: m.tvl })));
+        console.log("Total TVL:", totalTVL);
+        console.log("seasonData.fields:", seasonData.fields, new Date(Number(seasonData.fields.created_at)).toLocaleDateString())
+
+        return {
+          id: seasonNumber,
+          seasonNumber,
+          status,
+          title: `Season ${seasonNumber}`,
+          description: `AI trading competition season ${seasonNumber}`,
+          createdAt: new Date((Number(seasonData.fields.created_at))).toISOString().split('T')[0],
+          startedAt: seasonData.fields.started_at !== "0" ? new Date(Number(seasonData.fields.started_at)).toISOString().split('T')[0] : "None",
+          endedAt: seasonData.fields.ended_at !=="0" ? new Date(Number(seasonData.fields.ended_at)).toISOString().split('T')[0] : "None",
+          totalTrades,
+          totalVolume,
+          aiModels: formattedAIModels,
+          metrics: {
+            totalDepositors: vaultContents.length, // Approximate depositor count
+            totalTVL,
+            averageAPY: 0, // Will be calculated from performance data
+            bestPerformer: formattedAIModels.length > 0 ? formattedAIModels[0].name : null,
+            worstPerformer: formattedAIModels.length > 0 ? formattedAIModels[formattedAIModels.length - 1].name : null,
+          },
+          milestones: [
+            { date: new Date((Number(seasonData.fields.created_at || 0)) ).toISOString().split('T')[0], event: 'Season Created', type: 'creation' },
+            ...(seasonData.fields.started_at ? [{ date: new Date(Number(seasonData.fields.started_at) ).toISOString().split('T')[0], event: 'Trading Started', type: 'start' }] : []),
+            ...(seasonData.fields.ended_at ? [{ date: new Date(Number(seasonData.fields.ended_at)).toISOString().split('T')[0], event: 'Season Ended', type: 'end' }] : []),
+          ],
+        };
+      });
+
+      return seasons.sort((a, b) => b.seasonNumber - a.seasonNumber); // Sort by season number descending
+    } catch (error) {
+      console.error('Error fetching seasons from contract:', error);
+      return [];
     }
-    
-    // TODO: Implement real contract data fetching
-    // This would query all seasons from contract
-    return [];
   }
 
   static async getHistoricalTrades(seasonNumber?: number): Promise<HistoricalTrade[]> {
     if (USE_MOCK_DATA) {
       return generateMockHistoricalTrades(seasonNumber);
     }
-    
+
     // TODO: Implement real contract data fetching
     // This would query trade history from contract events
     return [];
@@ -242,20 +361,46 @@ export class DataAdapter {
 
   // Helper function to get model emoji
   static getModelEmoji(modelName: string): string {
-    const emojis: Record<string, string> = {
-      'Amazon Nova Pro': '🚀',
-      'Claude Sonnet 4.5': '🧠',
-      'Llama 4 Maverick 17B Instruct': '🦙',
+    const modelEmojis: { [key: string]: string } = {
+      'CLAUDE': '🤖',
+      'NOVA': '🚀',
+      'LLAMA': '🦙'
     };
-    return emojis[modelName] || '🤖';
+    return modelEmojis[modelName] || '🤖';
+  }
+
+  // Helper function to get model display name
+  static getModelDisplayName(modelName: string): string {
+    const modelMappings: { [key: string]: string } = {
+      'CLAUDE': 'Claude Sonnet 4.5',
+      'NOVA': 'Amazon Nova Pro',
+      'LLAMA': 'Llama 4 Maverick 17B Instruct'
+    };
+    return modelMappings[modelName] || modelName;
+  }
+
+  // Helper function to get contract model name from display name
+  static getContractModelName(displayName: string): string {
+    const reverseMappings: { [key: string]: string } = {
+      'Claude Sonnet 4.5': 'CLAUDE',
+      'Amazon Nova Pro': 'NOVA',
+      'Llama 4 Maverick 17B Instruct': 'LLAMA'
+    };
+    return reverseMappings[displayName] || displayName;
+  }
+
+  // Helper function to validate contract model name
+  static isValidContractModelName(modelName: string): boolean {
+    const validModels = ['CLAUDE', 'NOVA', 'LLAMA'];
+    return validModels.includes(modelName);
   }
 
   // Helper function to get model color
   static getModelColor(modelName: string): string {
     const colors: Record<string, string> = {
-      'Amazon Nova Pro': '#00ff88',
-      'Claude Sonnet 4.5': '#00d4ff',
-      'Llama 4 Maverick 17B Instruct': '#ff00ff',
+      'CLAUDE': '#00d4ff',
+      'NOVA': '#00ff88',
+      'LLAMA': '#ff00ff',
     };
     return colors[modelName] || '#ffffff';
   }
@@ -263,15 +408,15 @@ export class DataAdapter {
   // Helper function to get available models
   static getAvailableModels(): string[] {
     return Object.keys({
-      'Amazon Nova Pro': '🚀',
-      'Claude Sonnet 4.5': '🧠',
-      'Llama 4 Maverick 17B Instruct': '🦙',
+      'CLAUDE': '🧠',
+      'NOVA': '🚀',
+      'LLAMA': '🦙',
     });
   }
 
   // Real wallet balance fetching from Sui blockchain
-  static async getWalletBalances(address: string): Promise<WalletBalances> { 
-    
+  static async getWalletBalances(address: string): Promise<WalletBalances> {
+
     try {
       // Fetch SUI balance
       const suiBalance = await suiClient.getBalance({
@@ -318,25 +463,24 @@ export class DataAdapter {
 
   // Real USDC faucet implementation
   static async requestMockUSDC(address: string, signAndExecuteTransaction?: any): Promise<boolean> {
-     
-    
+
     if (!signAndExecuteTransaction) {
       throw new Error('signAndExecuteTransaction function is required for real faucet requests');
     }
-    
+
     try {
       console.log(`Requesting real mock USDC for address: ${address}`);
-      
+
       // Create transaction to mint USDC
       const tx = new Transaction();
-      tx.setGasBudget(10000000); // 0.01 SUI gas budget
-      
+      tx.setGasBudget(GAS_CONFIG.DEFAULT_BUDGET);
+
       // Call the mint function from mock_usdc contract
       tx.moveCall({
-        target: `${CONTRACT_ADDRESSES.TRADE_ARENA_PACKAGE}::mock_usdc::mint`,
+        target: CONTRACT_TARGETS.MINT_USDC,
         arguments: [
           tx.object(CONTRACT_ADDRESSES.USDC_GLOBAL), // USDC global object
-          tx.pure.u64(1000000000), // 1000 USDC (6 decimals)
+          tx.pure.u64(convertToDecimals(1000, 'USDC')), // 1000 USDC
           tx.pure.address(address), // recipient address
         ]
       });
@@ -351,13 +495,14 @@ export class DataAdapter {
       });
 
       console.log('USDC faucet transaction result:', result);
-      
-      // Check if transaction was successful
-      if (result.effects?.status?.status === 'success') {
+
+      // Check transaction status - new version returns digest for successful transactions
+      // If there's a digest, the transaction was successful
+      if (result.digest) {
         console.log('Successfully minted 1000 USDC');
         return true;
       } else {
-        console.error('USDC faucet transaction failed:', result.effects?.status?.error);
+        console.error('USDC faucet transaction failed - no digest returned');
         return false;
       }
     } catch (error) {

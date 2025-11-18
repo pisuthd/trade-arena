@@ -9,7 +9,7 @@ import { getSeasonStatusText } from '@/hooks/useSeasonManager';
 import { DataAdapter } from '@/data/dataAdapter';
 import { useWalletBalance } from '@/hooks/useWalletBalance';
 import { usePrice } from '@/hooks/usePrice';
-import { RefreshCw, Droplets } from 'lucide-react';
+import { RefreshCw, Droplets, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
@@ -123,7 +123,7 @@ export default function PortfolioPage() {
             </div>
             <p className="text-2xl font-bold text-[#00ff88]">{formatCurrency(portfolioData.totalValue)}</p>
           </div>
-          
+
           <div className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-gray-400 text-sm">Total Deposited</p>
@@ -131,7 +131,7 @@ export default function PortfolioPage() {
             </div>
             <p className="text-2xl font-bold text-[#00d4ff]">{formatCurrency(portfolioData.totalDeposited)}</p>
           </div>
-          
+
           <div className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-gray-400 text-sm">Total Profit</p>
@@ -145,7 +145,7 @@ export default function PortfolioPage() {
               {portfolioData.totalProfit >= 0 ? '+' : ''}{formatCurrency(portfolioData.totalProfit)}
             </p>
           </div>
-          
+
           <div className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-gray-400 text-sm">Return</p>
@@ -229,11 +229,10 @@ export default function PortfolioPage() {
                         <span className="px-2 py-1 text-xs font-medium bg-gray-800 rounded-lg">
                           Season {holding.seasonNumber}
                         </span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-lg ${
-                          holding.seasonStatus === 0 ? 'bg-yellow-500/20 text-yellow-400' :
-                          holding.seasonStatus === 1 ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-gray-500/20 text-gray-400'
-                        }`}>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-lg ${holding.seasonStatus === 0 ? 'bg-yellow-500/20 text-yellow-400' :
+                            holding.seasonStatus === 1 ? 'bg-blue-500/20 text-blue-400' :
+                              'bg-gray-500/20 text-gray-400'
+                          }`}>
                           {getSeasonStatusText(holding.seasonStatus).text}
                         </span>
                       </div>
@@ -242,35 +241,35 @@ export default function PortfolioPage() {
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-6">
                     <div className="text-right">
                       <p className="text-sm text-gray-400">USDC Balance</p>
                       <p className="text-lg font-semibold">${(holding.usdcBalance / 1_000_000).toLocaleString()}</p>
                     </div>
-                    
+
                     <div className="text-right">
                       <p className="text-sm text-gray-400">BTC Balance</p>
                       <p className="text-lg font-semibold">{(holding.btcBalance / 1_000_000).toLocaleString()}</p>
                     </div>
-                    
+
                     <div className="text-right">
                       <p className="text-sm text-gray-400">Current Value</p>
                       <p className="text-lg font-semibold" style={{ color: getModelColor(holding.aiName) }}>
                         {formatCurrency(holding.currentValue)}
                       </p>
                     </div>
-                    
+
                     <div className="text-right">
                       <p className="text-sm text-gray-400">P&L</p>
                       <p className={`text-lg font-semibold ${holding.profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {holding.profit >= 0 ? '+' : ''}{formatCurrency(holding.profit)}
                       </p>
                     </div>
-                    
+
                     <div className="flex space-x-2">
                       {holding.seasonStatus === 0 && (
-                        <button 
+                        <button
                           onClick={() => openDepositModal(holding.aiName, holding.seasonNumber)}
                           className="px-4 py-2 bg-[#00ff88]/20 text-[#00ff88] hover:bg-[#00ff88]/30 rounded-lg transition-colors text-sm font-medium"
                         >
@@ -278,7 +277,7 @@ export default function PortfolioPage() {
                         </button>
                       )}
                       {holding.seasonStatus === 2 && (
-                        <button 
+                        <button
                           onClick={() => openWithdrawModal(holding.aiName, holding.seasonNumber)}
                           className="px-4 py-2 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-lg transition-colors text-sm font-medium"
                         >
@@ -403,7 +402,7 @@ export default function PortfolioPage() {
       </div>
 
       {/* Modals */}
-    {depositModal.isOpen && (
+      {depositModal.isOpen && (
         <DepositModal
           isOpen={depositModal.isOpen}
           onClose={() => setDepositModal({ isOpen: false, aiName: '', seasonNumber: 0 })}
@@ -418,7 +417,7 @@ export default function PortfolioPage() {
         />
       )}
 
-       {withdrawModal.isOpen && (
+      {withdrawModal.isOpen && (
         <WithdrawModal
           isOpen={withdrawModal.isOpen}
           onClose={() => setWithdrawModal({ isOpen: false, aiName: '', seasonNumber: 0 })}

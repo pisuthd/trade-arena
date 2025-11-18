@@ -10,6 +10,7 @@ import { DataAdapter } from '@/data/dataAdapter';
 import { Trade, VaultValue, AIModel } from '@/data/mockData';
 
 const HomeContainer = () => {
+
     const [chartData, setChartData] = useState<VaultValue[]>([]);
     const [liveFeed, setLiveFeed] = useState<Trade[]>([]);
     const [aiModels, setAiModels] = useState<AIModel[]>([]);
@@ -106,7 +107,7 @@ const HomeContainer = () => {
             </div>
 
 
-            {/* Ultra-Minimal Hero - Just Title */}
+            {/*   Title */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 pt-8 pb-6">
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -125,34 +126,34 @@ const HomeContainer = () => {
             {/* Main Content - Chart and Feed */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 pb-8">
 
-                {/* Compact Stats Bar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="mb-6 bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4"
-                >
-                    <div className="grid grid-cols-4 gap-4 text-center">
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Season</p>
-                            <p className="text-xl font-bold text-[#ff00ff]">1</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Active Trades</p>
-                            <p className="text-xl font-bold text-[#00d4ff]">24</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Total Capital</p>
-                            <p className="text-xl font-bold text-[#00ff88]">$60,000</p>
-                        </div>
-
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Time Left</p>
-                            <p className="text-xl font-bold text-white">5d 14h</p>
-                        </div>
-                    </div>
-                </motion.div>
-
+               
+{/* AI Model Stats - Compact Row */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                    {aiModels.map((model, index) => (
+                        <motion.div
+                            key={model.name}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-all"
+                        >
+                            <div className="flex items-center justify-between mb-1">
+                                <h3 className="font-bold text-sm">{model.name}</h3>
+                                {model.change > 0 ? (
+                                    <ArrowUpRight className="w-4 h-4" style={{ color: model.color }} />
+                                ) : (
+                                    <ArrowDownRight className="w-4 h-4 text-red-500" />
+                                )}
+                            </div>
+                            <p className="text-xl font-bold mb-0.5" style={{ color: model.color }}>
+                                ${model.value.toLocaleString()}
+                            </p>
+                            <p className={`text-xs font-medium ${model.change > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                {model.change > 0 ? '+' : ''}{model.change}%
+                            </p>
+                        </motion.div>
+                    ))}
+                </div>
 
 
                 {/* Chart and Live Feed Row - Maximum Height */}
@@ -255,35 +256,35 @@ const HomeContainer = () => {
                     </motion.div>
                 </div>
 
+                 {/* Compact Stats Bar */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="my-6 bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4"
+                >
+                    <div className="grid grid-cols-4 gap-4 text-center">
+                        <div>
+                            <p className="text-xs text-gray-400 mb-1">Season</p>
+                            <p className="text-xl font-bold text-[#ff00ff]">1</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-400 mb-1">Active Trades</p>
+                            <p className="text-xl font-bold text-[#00d4ff]">24</p>
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-400 mb-1">Total Capital</p>
+                            <p className="text-xl font-bold text-[#00ff88]">$60,000</p>
+                        </div>
 
-                {/* AI Model Stats - Compact Row */}
-                <div className="grid grid-cols-3 gap-3 my-6">
-                    {aiModels.map((model, index) => (
-                        <motion.div
-                            key={model.name}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                            className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-all"
-                        >
-                            <div className="flex items-center justify-between mb-1">
-                                <h3 className="font-bold text-sm">{model.name}</h3>
-                                {model.change > 0 ? (
-                                    <ArrowUpRight className="w-4 h-4" style={{ color: model.color }} />
-                                ) : (
-                                    <ArrowDownRight className="w-4 h-4 text-red-500" />
-                                )}
-                            </div>
-                            <p className="text-xl font-bold mb-0.5" style={{ color: model.color }}>
-                                ${model.value.toLocaleString()}
-                            </p>
-                            <p className={`text-xs font-medium ${model.change > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {model.change > 0 ? '+' : ''}{model.change}%
-                            </p>
-                        </motion.div>
-                    ))}
-                </div>
+                        <div>
+                            <p className="text-xs text-gray-400 mb-1">Time Left</p>
+                            <p className="text-xl font-bold text-white">5d 14h</p>
+                        </div>
+                    </div>
+                </motion.div>
 
+ 
 
                 {/* About Section - Merged from About Page */}
                 <motion.div

@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { X, Wallet, TrendingUp, AlertCircle, CheckCircle, ArrowRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useDepositToVault } from '@/hooks/useSeasonManager';
+import { useDepositToVault, useUserUSDCBalance, formatUSDC } from '@/hooks/useSeasonManager';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 
 interface DepositModalProps {
@@ -24,25 +24,37 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
   const [depositAmount, setDepositAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [txDigest, setTxDigest] = useState('');
+  const [error, setError] = useState('');
   
   const currentAccount = useCurrentAccount();
   const { depositToVault } = useDepositToVault();
+  const { data: userBalance } = useUserUSDCBalance();
   
   const minDeposit = vaultInfo.minDeposit;
   const amount = parseFloat(depositAmount) || 0;
   const isWalletConnected = !!currentAccount;
+  const userUSDCBalance = userBalance ? parseFloat(formatUSDC(parseInt(userBalance.totalBalance))) : 0;
 
   const handleDeposit = async () => {
     if (!currentAccount || amount < minDeposit) return;
     
     setIsProcessing(true);
+    setError('');
     try {
-      await depositToVault(1, modelName, amount);
+      // Use contract name for the transaction, but display name for UI
+      const contractModelName = modelName; // The season page now passes contract name
+      console.log("Depositing to contract model:", contractModelName);
+      
+      const result = await depositToVault(1, contractModelName, amount);
       setIsProcessing(false);
       setIsComplete(true);
+      setTxDigest(result.digest || '');
       setStep(3);
     } catch (error) {
       setIsProcessing(false);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage);
       console.error('Deposit failed:', error);
     }
   };
@@ -88,8 +100,7 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
             <div className="flex items-center space-x-3">
               <div className="text-3xl">{modelEmoji}</div>
               <div>
-                <h3 className="text-xl font-bold">Deposit to {modelName}</h3>
-                <p className="text-sm text-gray-400">Vault Investment</p>
+                <h3 className="text-xl font-bold">Deposit to {modelName}</h3> 
               </div>
             </div>
             <button
@@ -111,7 +122,12 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
                 className="space-y-6"
               >
                 <div>
-                  <label className="block text-sm font-medium mb-2">Deposit Amount (USDT)</label>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-sm font-medium">Deposit Amount (USDC)</label>
+                    <div className="text-sm text-gray-400">
+                      Balance: {formatCurrency(userUSDCBalance)}
+                    </div>
+                  </div>
                   <div className="relative">
                     <input
                       type="number"
@@ -147,6 +163,19 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
                       Minimum deposit is {formatCurrency(minDeposit)}
                     </p>
                   )}
+                  {amount > userUSDCBalance && (
+                    <p className="text-red-400 text-sm mt-2 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      Insufficient balance. You have {formatCurrency(userUSDCBalance)}
+                    </p>
+                  )}
+                  {userUSDCBalance < minDeposit && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-3">
+                      <p className="text-yellow-400 text-sm text-center">
+                        You need mock USDC to deposit. Get some from the Portfolio page faucet first.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Vault Info */}
@@ -173,7 +202,7 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
 
                 <button
                   onClick={() => setStep(2)}
-                  disabled={amount < minDeposit}
+                  disabled={amount < minDeposit || amount > userUSDCBalance}
                   className="w-full bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-semibold py-3 rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continue
@@ -214,6 +243,12 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
                       </div>
                     </div>
 
+                    {error && (
+                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                        <p className="text-red-400 text-sm">{error}</p>
+                      </div>
+                    )}
+                    
                     <button
                       onClick={handleDeposit}
                       disabled={isProcessing}
@@ -256,7 +291,9 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
                 <div className="bg-gray-800/50 rounded-lg p-4 space-y-2 text-left">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Transaction Hash</span>
-                    <span className="font-mono text-xs">0x1234...5678</span>
+                    <span className="font-mono text-xs">
+                      {txDigest ? `${txDigest.slice(0, 8)}...${txDigest.slice(-6)}` : 'Processing...'}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Your Share</span>

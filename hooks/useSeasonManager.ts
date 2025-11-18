@@ -1,10 +1,11 @@
 "use client"
 
-import { useCurrentAccount, useSuiClient, useSuiClientQuery } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSuiClient, useSuiClientQuery, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
 import { Transaction } from '@mysten/sui/transactions';
+import { CONTRACT_ADDRESSES, CONTRACT_TARGETS, GAS_CONFIG, convertToDecimals } from '../config/contracts';
+import { DataAdapter } from '../data/dataAdapter';
 
 // Contract constants
-const SEASON_GLOBAL_ID = '0x323afc98c387c70f9bc8528d7355aa7e520c352778c2406f15962f6e064bb9da';
 const MIN_USER_DEPOSIT = 10_000_000; // 10 USDC (6 decimals)
 
 // Types
@@ -39,9 +40,9 @@ export interface VaultInfo {
 // Hook to get current season info
 export function useCurrentSeason(seasonNumber: number = 1) {
   const suiClient = useSuiClient();
-  
+
   return useSuiClientQuery('getObject', {
-    id: SEASON_GLOBAL_ID,
+    id: CONTRACT_ADDRESSES.SEASON_GLOBAL,
     options: {
       showContent: true,
       showType: true,
@@ -52,9 +53,9 @@ export function useCurrentSeason(seasonNumber: number = 1) {
 // Hook to get vault balance
 export function useVaultBalance(seasonNumber: number, aiName: string) {
   const suiClient = useSuiClient();
-  
+
   return useSuiClientQuery('getDynamicFields', {
-    parentId: SEASON_GLOBAL_ID,
+    parentId: CONTRACT_ADDRESSES.SEASON_GLOBAL,
   });
 }
 
@@ -62,7 +63,7 @@ export function useVaultBalance(seasonNumber: number, aiName: string) {
 export function useUserLPTokens(userAddress?: string) {
   const suiClient = useSuiClient();
   const currentAccount = useCurrentAccount();
-  
+
   return useSuiClientQuery('getOwnedObjects', {
     owner: userAddress || currentAccount?.address || '',
     filter: {
@@ -75,10 +76,22 @@ export function useUserLPTokens(userAddress?: string) {
   });
 }
 
-// Hook for depositing to vault
-export function useDepositToVault() {
+// Hook to get user's USDC balance
+export function useUserUSDCBalance(userAddress?: string) {
   const suiClient = useSuiClient();
   const currentAccount = useCurrentAccount();
+
+  return useSuiClientQuery('getBalance', {
+    owner: userAddress || currentAccount?.address || '',
+    coinType: CONTRACT_ADDRESSES.MOCK_USDC_TYPE,
+  });
+}
+
+// Hook for depositing to vault
+export function useDepositToVault() {
+  const currentAccount = useCurrentAccount();
+  const suiClient = useSuiClient();
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
   const depositToVault = async (
     seasonNumber: number,
@@ -89,26 +102,77 @@ export function useDepositToVault() {
       throw new Error('Wallet not connected');
     }
 
+    // Validate AI model name and ensure we're using the contract name
+    if (!DataAdapter.isValidContractModelName(aiName)) {
+      throw new Error(`Invalid AI model name: ${aiName}. Valid names are: CLAUDE, NOVA, LLAMA`);
+    }
+
+    // Ensure we're using the contract name (short name) for the transaction
+    const contractModelName = aiName.toUpperCase(); // Ensure it's in the correct format
+    console.log("Using contract model name:", contractModelName);
+
+    // Convert amount to 6 decimals for USDC
+    const amountInDecimals = convertToDecimals(amount, 'USDC');
+
     try {
-      const tx = new Transaction();
-      
-      // Add deposit_to_vault call
-      tx.moveCall({
-        target: `${SEASON_GLOBAL_ID}::season_manager::deposit_to_vault`,
-        arguments: [
-          tx.object(SEASON_GLOBAL_ID),
-          tx.pure.u64(seasonNumber),
-          tx.pure.string(aiName),
-          tx.splitCoins(tx.gas, [amount]), // USDC amount
-          tx.object('0x6'), // Clock object
-        ],
-        typeArguments: ['trade_arena::mock_usdc::MOCK_USDC'],
+      // Get user's USDC coins
+      const allCoins = await suiClient.getCoins({
+        owner: currentAccount.address,
+        coinType: CONTRACT_ADDRESSES.MOCK_USDC_TYPE,
       });
 
-      const result = await suiClient.signAndExecuteTransaction({
-        transaction: tx,
-        signer: currentAccount as any,
+      if (allCoins.data.length === 0) {
+        throw new Error('No USDC coins found in wallet');
+      }
+
+      // Check if balance is sufficient
+      const totalBalance = allCoins.data.reduce(
+        (sum, coin) => sum + Number(coin.balance),
+        0
+      );
+
+      if (totalBalance < amountInDecimals) {
+        throw new Error(`Insufficient USDC balance. Available: ${(totalBalance / 1_000_000).toFixed(2)}, Required: ${amount}`);
+      }
+
+      const tx = new Transaction();
+      tx.setGasBudget(GAS_CONFIG.DEFAULT_BUDGET);
+
+      // Get the main coin and rest coins for merging
+      const [mainCoin, ...restCoins] = allCoins.data;
+
+      // Merge all USDC coins into the main coin
+      if (restCoins.length > 0) {
+        tx.mergeCoins(
+          tx.object(mainCoin.coinObjectId),
+          restCoins.map((coin) => tx.object(coin.coinObjectId)),
+        );
+      }
+
+      // Split the exact amount needed for deposit 
+      const [depositCoin] = tx.splitCoins(mainCoin.coinObjectId, [amountInDecimals]);
+
+      // Add deposit_to_vault call
+      tx.moveCall({
+        target: CONTRACT_TARGETS.DEPOSIT_TO_VAULT,
+        arguments: [
+          tx.object(CONTRACT_ADDRESSES.SEASON_GLOBAL),
+          tx.pure.u64(seasonNumber),
+          tx.pure.string(contractModelName),
+          depositCoin, // Use the split coin 
+          tx.object(CONTRACT_ADDRESSES.CLOCK), // Clock object 
+        ]
       });
+
+      const result = await signAndExecuteTransaction({
+        transaction: tx
+      });
+
+      // Check transaction status - new version returns digest for successful transactions
+      // If there's a digest, the transaction was successful
+      if (!result.digest) {
+        throw new Error('Transaction failed - no digest returned');
+      }
 
       return result;
     } catch (error) {
@@ -122,8 +186,8 @@ export function useDepositToVault() {
 
 // Hook for withdrawing from vault
 export function useWithdrawFromVault() {
-  const suiClient = useSuiClient();
   const currentAccount = useCurrentAccount();
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
 
   const withdrawFromVault = async (
     seasonNumber: number,
@@ -134,24 +198,39 @@ export function useWithdrawFromVault() {
       throw new Error('Wallet not connected');
     }
 
+    // Validate AI model name and ensure we're using the contract name
+    if (!DataAdapter.isValidContractModelName(aiName)) {
+      throw new Error(`Invalid AI model name: ${aiName}. Valid names are: CLAUDE, NOVA, LLAMA`);
+    }
+
+    // Ensure we're using the contract name (short name) for the transaction
+    const contractModelName = aiName.toUpperCase(); // Ensure it's in correct format
+    console.log("Using contract model name for withdrawal:", contractModelName);
+
     try {
       const tx = new Transaction();
-      
+      tx.setGasBudget(GAS_CONFIG.DEFAULT_BUDGET);
+
       // Add withdraw_from_vault call
       tx.moveCall({
-        target: `${SEASON_GLOBAL_ID}::season_manager::withdraw_from_vault`,
+        target: CONTRACT_TARGETS.WITHDRAW_FROM_VAULT,
         arguments: [
-          tx.object(SEASON_GLOBAL_ID),
+          tx.object(CONTRACT_ADDRESSES.SEASON_GLOBAL),
           tx.pure.u64(seasonNumber),
-          tx.pure.string(aiName),
+          tx.pure.string(contractModelName),
           tx.object(lpTokenId), // LP token object
         ],
       });
 
-      const result = await suiClient.signAndExecuteTransaction({
+      const result = await signAndExecuteTransaction({
         transaction: tx,
-        signer: currentAccount as any,
       });
+
+      // Check transaction status - new version returns digest for successful transactions
+      // If there's a digest, the transaction was successful
+      if (!result.digest) {
+        throw new Error('Transaction failed - no digest returned');
+      }
 
       return result;
     } catch (error) {
