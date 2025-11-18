@@ -9,7 +9,7 @@ export interface TradeExecutionParams {
   dexGlobalId: string;
   usdcAmount: number;
   btcAmount?: number;
-  reasoning: string;
+  shortReasoning: string;
   confidence: number;
   walrusBlobId: string;
   packageId: string;
@@ -33,7 +33,8 @@ export async function executeLongTrade(
 ): Promise<TransactionResponse> {
   try {
     // Create transaction for LONG trade (USDC → BTC)
-    const tx = new Transaction();
+    const tx = new Transaction(); 
+    tx.setGasBudget(50000000); // Set explicit gas budget (50 MIST)
 
     // Execute the AI long trade function
     tx.moveCall({
@@ -44,18 +45,11 @@ export async function executeLongTrade(
         tx.pure.string(params.aiModel),
         tx.object(params.dexGlobalId),
         tx.pure.u64(params.usdcAmount),
-        tx.pure.string(params.reasoning),
+        tx.pure.string(params.shortReasoning),
         tx.pure.u64(params.confidence),
-        tx.pure.vector('u8', Array.from(Buffer.from(params.walrusBlobId, 'hex'))),
-        tx.sharedObjectRef({
-          objectId: '0x6', // Clock object ID
-          initialSharedVersion: 1,
-          mutable: false
-        })
-      ],
-      typeArguments: [
-        '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_usdc::MOCK_USDC',
-        '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_btc::MOCK_BTC'
+        // tx.pure.vector('u8', Array.from(Buffer.from(params.walrusBlobId, 'hex'))),
+        tx.pure.string(params.walrusBlobId),
+        tx.object("0x6")
       ]
     });
 
@@ -92,7 +86,8 @@ export async function executeShortTrade(
     }
 
     // Create transaction for SHORT trade (BTC → USDC)
-    const tx = new Transaction();
+    const tx = new Transaction(); 
+    tx.setGasBudget(50000000); // Set explicit gas budget (50 MIST)
 
     // Execute the AI short trade function
     tx.moveCall({
@@ -103,18 +98,11 @@ export async function executeShortTrade(
         tx.pure.string(params.aiModel),
         tx.object(params.dexGlobalId),
         tx.pure.u64(params.btcAmount),
-        tx.pure.string(params.reasoning),
+        tx.pure.string(params.shortReasoning),
         tx.pure.u64(params.confidence),
-        tx.pure.vector('u8', Array.from(Buffer.from(params.walrusBlobId, 'hex'))),
-        tx.sharedObjectRef({
-          objectId: '0x6', // Clock object ID
-          initialSharedVersion: 1,
-          mutable: false
-        })
-      ],
-      typeArguments: [
-        '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_usdc::MOCK_USDC',
-        '0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_btc::MOCK_BTC'
+        // tx.pure.vector('u8', Array.from(Buffer.from(params.walrusBlobId, 'hex'))),
+        tx.pure.string(params.walrusBlobId),
+        tx.object("0x6")
       ]
     });
 
@@ -160,42 +148,49 @@ export async function getVaultBalance(
 
     const content = result.data.content as any;
     const fields = content.fields || {};
-    
+
     // seasons is a VecMap<u64, Season>, need to access it properly
     const seasonsVecMap = fields.seasons || {};
-    const seasonsContents = seasonsVecMap.contents || [];
-    
+    const seasonsContents = seasonsVecMap.fields.contents || [];
+
     // Find the specific season
-    const seasonEntry = seasonsContents.find((entry: any) => 
-      entry.key === params.seasonNumber.toString()
+    const seasonEntry = seasonsContents.find((entry: any) =>
+      entry.fields.key === params.seasonNumber.toString()
     );
-    
+
     if (!seasonEntry) {
       throw new Error(`Season ${params.seasonNumber} not found`);
     }
 
-    const seasonData = seasonEntry.value;
+    const seasonData = seasonEntry.fields.value;
     const season = seasonData.fields || {};
     const aiVaults = season.ai_vaults || {};
-    const vaultContents = aiVaults.contents || [];
-    
+    // Handle both possible structures: direct contents or nested fields.contents
+    let vaultContents = [];
+    if (aiVaults.contents) {
+      vaultContents = aiVaults.contents;
+    } else if (aiVaults.fields && aiVaults.fields.contents) {
+      vaultContents = aiVaults.fields.contents;
+    }
+
     if (vaultContents.length === 0) {
       throw new Error('No AI vaults found for this season');
     }
 
     // Return balances for all vaults
     const vaultBalances = vaultContents.map((entry: any) => {
-      const aiName = entry.key;
-      const vaultData = entry.value;
-      
+      const aiName = entry.fields.key;
+      const vaultData = entry.fields.value;
+      const vaultFields = vaultData.fields || vaultData;
+
       return {
         ai_name: aiName,
-        authorized_wallet: vaultData.authorized_wallet || '',
-        trading_paused: vaultData.trading_paused || false,
-        usdc_balance: vaultData.usdc_balance || '0',
-        btc_balance: vaultData.btc_balance || '0',
-        lp_supply: vaultData.lp_supply?.value || '0',
-        trade_history_count: (vaultData.trade_history || []).length
+        authorized_wallet: vaultFields.authorized_wallet || '',
+        trading_paused: vaultFields.trading_paused || false,
+        usdc_balance: vaultFields.usdc_balance || '0',
+        btc_balance: vaultFields.btc_balance || '0',
+        lp_supply: vaultFields.lp_supply?.value || '0',
+        trade_history_count: (vaultFields.trade_history || []).length
       };
     });
 
@@ -230,33 +225,40 @@ export async function getTradeHistory(
 
     const content = result.data.content as any;
     const fields = content.fields || {};
-    
+
     // seasons is a VecMap<u64, Season>, need to access it properly
     const seasonsVecMap = fields.seasons || {};
-    const seasonsContents = seasonsVecMap.contents || [];
-    
+    const seasonsContents = seasonsVecMap.fields.contents || [];
+
     // Find the specific season
-    const seasonEntry = seasonsContents.find((entry: any) => 
-      entry.key === params.seasonNumber.toString()
+    const seasonEntry = seasonsContents.find((entry: any) =>
+      entry.fields.key === params.seasonNumber.toString()
     );
-    
+
     if (!seasonEntry) {
       throw new Error(`Season ${params.seasonNumber} not found`);
     }
 
-    const seasonData = seasonEntry.value;
+    const seasonData = seasonEntry.fields.value;
     const season = seasonData.fields || {};
     const aiVaults = season.ai_vaults || {};
-    const vaultContents = aiVaults.contents || [];
-    
+    // Handle both possible structures: direct contents or nested fields.contents
+    let vaultContents = [];
+    if (aiVaults.contents) {
+      vaultContents = aiVaults.contents;
+    } else if (aiVaults.fields && aiVaults.fields.contents) {
+      vaultContents = aiVaults.fields.contents;
+    }
+
     // Collect trade history from all AI vaults
     const allTradeHistory: any[] = [];
-    
+
     for (const entry of vaultContents) {
-      const aiName = entry.key;
-      const vaultData = entry.value;
-      const tradeHistory = vaultData.trade_history || [];
-      
+      const aiName = entry.fields.key;
+      const vaultData = entry.fields.value;
+      const vaultFields = vaultData.fields || vaultData;
+      const tradeHistory = vaultFields.trade_history || [];
+
       // Format trade history for this AI vault
       const formattedHistory = tradeHistory.map((trade: any) => {
         const tradeFields = trade.fields || trade;
@@ -270,11 +272,11 @@ export async function getTradeHistory(
           entry_price: tradeFields.entry_price,
           reasoning: tradeFields.reasoning,
           confidence: tradeFields.confidence,
-          walrus_blob_id: tradeFields.walrus_blob_id ? 
+          walrus_blob_id: tradeFields.walrus_blob_id ?
             Buffer.from(tradeFields.walrus_blob_id).toString('hex') : null
         };
       });
-      
+
       allTradeHistory.push(...formattedHistory);
     }
 
