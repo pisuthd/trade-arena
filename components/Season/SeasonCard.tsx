@@ -44,7 +44,7 @@ export default function SeasonCard({
   onWithdraw
 }: SeasonCardProps) {
   const isExpanded = expandedSeason === season.id;
-
+ 
   return (
     <div className="border border-gray-800 rounded-xl overflow-hidden bg-gray-900/50">
       {/* Season Header */}
@@ -85,7 +85,7 @@ export default function SeasonCard({
             </div>
 
             <div className="text-right">
-              <p className="text-sm text-gray-400">Total TVL</p>
+              <p className="text-sm text-gray-400">Current Value</p>
               <p className="text-xl font-bold">{formatCurrency(season.metrics.totalTVL)}</p>
             </div>
 

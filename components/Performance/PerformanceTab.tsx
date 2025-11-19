@@ -19,17 +19,17 @@ export default function PerformanceTab({
         </div>
         <div className="mt-4 grid grid-cols-3 gap-4">
           <MetricCard
-            title="Start Value"
-            value="$10,000"
+            title="Initial Deposit"
+            value="$3,000"
           />
           <MetricCard
             title="Current Value"
-            value={formatCurrency(10000 + (model.pnl * 100))}
+            value={formatCurrency(3000 + (model.pnl || 0))}
           />
           <MetricCard
             title="Total Return"
-            value="+0%"
-            className="text-green-400"
+            value={`${(model.pnlPercentage || 0).toFixed(2)}%`}
+            className={model.pnlPercentage >= 0 ? "text-green-400" : "text-red-400"}
           />
         </div>
       </div>

@@ -6,13 +6,9 @@ import {
   PortfolioHolding,
   SeasonData,
   HistoricalTrade,
-  INITIAL_TRADES,
-  generateMockChartData,
-  generateMockTrade,
   generateMockPortfolioHoldings,
-  generateMockSeasons,
   generateMockHistoricalTrades
-} from './mockData';
+} from './dataModel';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { CONTRACT_ADDRESSES, CONTRACT_TARGETS, GAS_CONFIG, convertToDecimals, convertFromDecimals } from '../config/contracts';
@@ -69,7 +65,7 @@ export class DataAdapter {
   // BTC price cache to avoid repeated API calls
   private static btcPriceCache: number | null = null;
   private static btcPriceCacheTime: number = 0;
-  private static readonly BTC_PRICE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  private static readonly BTC_PRICE_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
   // Fetch BTC price from API
   private static async fetchBTCPrice(): Promise<number> {
@@ -107,7 +103,7 @@ export class DataAdapter {
   }
   static async getAIModels(): Promise<AIModel[]> {
     if (USE_MOCK_DATA) {
-      const { AI_MODELS } = await import('./mockData');
+      const { AI_MODELS } = await import('./dataModel');
       return AI_MODELS;
     }
 
@@ -118,7 +114,7 @@ export class DataAdapter {
 
   static async getChartData(): Promise<VaultValue[]> {
     if (USE_MOCK_DATA) {
-      const { generateMockChartData } = await import('./mockData');
+      const { generateMockChartData } = await import('./dataModel');
       return generateMockChartData();
     }
 
@@ -129,7 +125,7 @@ export class DataAdapter {
 
   static async getTradeFeed(): Promise<Trade[]> {
     if (USE_MOCK_DATA) {
-      const { INITIAL_TRADES } = await import('./mockData');
+      const { INITIAL_TRADES } = await import('./dataModel');
       return INITIAL_TRADES;
     }
 
@@ -140,7 +136,7 @@ export class DataAdapter {
 
   static async generateNewTrade(): Promise<Trade> {
     if (USE_MOCK_DATA) {
-      const { generateMockTrade } = await import('./mockData');
+      const { generateMockTrade } = await import('./dataModel');
       return generateMockTrade();
     }
 
@@ -311,8 +307,7 @@ export class DataAdapter {
         
         console.log("Vault contents found:", vaultContents.length, "vaults");
 
-
-        // Update TVL for each AI model from vault data
+        // Update TVL and performance metrics for each AI model from vault data
         vaultContents.forEach((vault: any) => { 
           const aiName = vault.fields.key;
           const vaultData = vault.fields.value;
@@ -320,7 +315,7 @@ export class DataAdapter {
           if (modelIndex !== -1) {
             // Access nested fields structure correctly
             const vaultFields = vaultData.fields || {};
-            
+ 
             // Calculate TVL including both USDC and BTC
             const usdcValue = convertFromDecimals(Number(vaultFields.usdc_balance || 0), 'USDC');
             const btcAmount = convertFromDecimals(Number(vaultFields.btc_balance || 0), 'BTC');
@@ -329,16 +324,71 @@ export class DataAdapter {
             
             console.log(`TVL for ${aiName}: USDC raw=${vaultFields.usdc_balance}, BTC raw=${vaultFields.btc_balance}`);
             console.log(`TVL for ${aiName}: USDC=${usdcValue}, BTC=${btcAmount}, BTC Value=${btcValueInUSDC}, Total=${formattedAIModels[modelIndex].tvl}`);
+
+            // Calculate performance metrics
+            const tradeHistory = vaultFields.trade_history || [];
+            formattedAIModels[modelIndex].trades = tradeHistory.length;
+
+            // Calculate PnL based on individual trade performance
+            let totalTradePnL = 0;
+            let profitableTrades = 0;
+
+            tradeHistory.forEach((trade: any) => {
+              const tradeFields = trade.fields;
+              const action = tradeFields.action;
+              const entryPrice = Number(tradeFields.entry_price) / 1e8; // Convert from decimals
+              const btcAmount = convertFromDecimals(Number(tradeFields.btc_amount || 0), 'BTC');
+              const usdcAmount = convertFromDecimals(Number(tradeFields.usdc_amount || 0), 'USDC');
+
+              if (action === 'LONG') {
+                // For LONG trades: PnL = (Current Price - Entry Price) * BTC Amount
+                const tradePnL = (btcPrice - entryPrice) * btcAmount;
+                totalTradePnL += tradePnL;
+                
+                if (btcPrice > entryPrice) {
+                  profitableTrades++;
+                }
+              } else if (action === 'SHORT') {
+                // For SHORT trades: PnL = (Entry Price - Current Price) * BTC Amount
+                const tradePnL = (entryPrice - btcPrice) * btcAmount;
+                totalTradePnL += tradePnL;
+                
+                if (btcPrice < entryPrice) {
+                  profitableTrades++;
+                }
+              }
+              // Note: CLOSE trades would need different logic, but we don't see them in the data
+            });
+
+            // Current vault value (already calculated as TVL)
+            const currentVaultValue = formattedAIModels[modelIndex].tvl;
+
+            // For PnL calculation, we use the trade-based PnL which represents actual trading performance
+            const pnl = totalTradePnL;
+            
+            // Use hardcoded initial deposit of 3000 USDC for PnL percentage calculation
+            const initialDeposit = 3000;
+            const pnlPercentage = (pnl / initialDeposit) * 100;
+
+            // Calculate win rate
+            const winRate = tradeHistory.length > 0 ? (profitableTrades / tradeHistory.length) * 100 : 0;
+
+            // Update model with performance data
+            formattedAIModels[modelIndex].pnl = pnl;
+            formattedAIModels[modelIndex].pnlPercentage = pnlPercentage;
+            formattedAIModels[modelIndex].winRate = winRate;
+
+            console.log(`Performance for ${aiName}: PnL=${pnl}, PnL%=${pnlPercentage.toFixed(2)}%, Win Rate=${winRate.toFixed(2)}%, Trades=${tradeHistory.length}`);
           }
         });
 
         // Calculate metrics
         const totalTVL = formattedAIModels.reduce((sum: number, model: any) => sum + model.tvl, 0);
-        const totalTrades = seasonData.total_trades || 0;
-        const totalVolume = convertFromDecimals(Number(seasonData.total_volume || 0), 'USDC');
+        const totalTrades = seasonData.fields.total_trades || 0;
+        const totalVolume = convertFromDecimals(Number(seasonData.fields.total_volume || 0), 'USDC');
 
         console.log("Final TVL calculation:");
-        console.log("Formatted AI Models:", formattedAIModels.map((m: any) => ({ name: m.name, tvl: m.tvl })));
+        console.log("Formatted AI Models:", formattedAIModels );
         console.log("Total TVL:", totalTVL);
         console.log("seasonData.fields:", seasonData.fields)
 

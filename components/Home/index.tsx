@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { useCurrentSeason, getSeasonStatusText } from '@/hooks/useSeasonManager';
 import { DataAdapter } from '@/data/dataAdapter';
-import { Trade, VaultValue, AIModel } from '@/data/mockData';
+import { Trade, VaultValue, AIModel } from '@/data/dataModel';
 
 const HomeContainer = () => {
 
@@ -49,22 +49,20 @@ const HomeContainer = () => {
     }, []);
 
     // Simulate live trade updates
-    useEffect(() => {
-        if (loading) return;
+    // useEffect(() => {
+    //     if (loading) return;
 
-        const interval = setInterval(async () => {
-            try {
-                const newTrade = await DataAdapter.generateNewTrade();
-                setLiveFeed(prev => [newTrade, ...prev.slice(0, 4)]);
-            } catch (error) {
-                console.error('Failed to generate new trade:', error);
-            }
-        }, 3000);
+    //     const interval = setInterval(async () => {
+    //         try {
+    //             const newTrade = await DataAdapter.generateNewTrade();
+    //             setLiveFeed(prev => [newTrade, ...prev.slice(0, 4)]);
+    //         } catch (error) {
+    //             console.error('Failed to generate new trade:', error);
+    //         }
+    //     }, 3000);
 
-        return () => clearInterval(interval);
-    }, [loading]);
-
-
+    //     return () => clearInterval(interval);
+    // }, [loading]);
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-white">

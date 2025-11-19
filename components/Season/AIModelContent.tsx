@@ -33,6 +33,9 @@ export default function AIModelContent({
   handleWithdraw, 
   handleContentTabClick 
 }: AIModelContentProps) {
+
+ 
+
   return (
     <div key={model.name}>
       {/* Model Stats Row */}
@@ -45,16 +48,22 @@ export default function AIModelContent({
           title="Total Trades"
           value={tradeMetrics.totalTrades}
         />
+        
         <MetricCard
-          title="Performance"
-          value="+0%"
-          className="text-green-400"
+          title="PnL"
+          value={formatCurrency(model.pnl || 0)}
+          className={model.pnl >= 0 ? "text-green-400" : "text-red-400"}
         />
         <MetricCard
-          title="APY"
-          value={`${(45.2 - (season.aiModels?.findIndex((m: any) => m.name === model.name) || 0) * 8).toFixed(1)}%`}
-          className="text-green-400"
+          title="PnL %"
+          value={`${(model.pnlPercentage || 0).toFixed(2)}%`}
+          className={model.pnlPercentage >= 0 ? "text-green-400" : "text-red-400"}
         />
+        {/* <MetricCard
+          title="Win Rate"
+          value={`${model.winRate || 0}%`}
+          className="text-blue-400"
+        /> */}
       </div>
 
       {/* Content Tabs */}

@@ -60,6 +60,8 @@ export interface SeasonData {
     tvl: number;
     trades: number;
     pnl: number;
+    pnlPercentage: number;
+    winRate: number;
   }[];
   metrics: {
     totalDepositors: number;
@@ -67,7 +69,7 @@ export interface SeasonData {
     averageAPY: number;
     bestPerformer: string | null;
     worstPerformer: string | null;
-  };
+  }
   milestones: {
     date: string;
     event: string;
@@ -287,7 +289,9 @@ export const generateMockSeasons = (): SeasonData[] => {
         status: 'completed',
         tvl: 245000 - index * 30000,
         trades: 342 - index * 50,
-        pnl: 38.3 - index * 8.5
+        pnl: 38.3 - index * 8.5,
+        pnlPercentage: 15.2 - index * 2.5,
+        winRate: 75 - index * 10
       })),
       metrics: {
         totalDepositors: 224,
@@ -320,7 +324,9 @@ export const generateMockSeasons = (): SeasonData[] => {
         status: index === 1 ? 'paused' : 'active',
         tvl: 320000 - index * 40000,
         trades: 245 - index * 30,
-        pnl: 28.7 - index * 6.5
+        pnl: 28.7 - index * 6.5,
+        pnlPercentage: 12.8 - index * 2.1,
+        winRate: 68 - index * 8
       })),
       metrics: {
         totalDepositors: 189,

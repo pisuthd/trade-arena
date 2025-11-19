@@ -1,6 +1,7 @@
 import React from 'react';
 import { MetricCard } from '../UI';
 import AssetAllocation from './AssetAllocation';
+import { convertFromDecimals } from '../../config/contracts';
 
 interface VaultTabProps {
   model: any;
@@ -26,6 +27,8 @@ export default function VaultTab({
   handleDeposit, 
   handleWithdraw 
 }: VaultTabProps) {
+ 
+
   return (
     <div className="space-y-6">
       {/* Vault Actions Section */}
@@ -68,82 +71,27 @@ export default function VaultTab({
       {/* Vault Statistics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <MetricCard
-          title="Total Value Locked"
-          value={formatCurrency(model.tvl)}
-          trend={{ value: '+12.5% this week', color: 'text-green-400' }}
+          title="Initial Deposit"
+          value={vaultData?.btc_balance > 0 ? "$3,000" : "$0"}
+          className="text-gray-300"
         />
         <MetricCard
-          title="Total Depositors"
-          value={Math.floor(model.tvl / 2500)}
-          trend={{ value: '+3 today', color: 'text-blue-400' }}
-        />
-        <MetricCard
-          title="Current APY"
-          value={`${(45.2 - (season.aiModels?.findIndex((m: any) => m.name === model.name) || 0) * 8).toFixed(1)}%`}
-          subtitle="Annualized"
+          title="Win Rate"
+          value={`${model.winRate || 0}%`}
           className="text-green-400"
         />
         <MetricCard
-          title="Your Share"
-          value="0.00%"
-          subtitle="Connect wallet"
+          title="USDC Balance"
+          value={vaultData?.usdc_balance ? formatCurrency(convertFromDecimals(vaultData.usdc_balance, 'USDC')) : "$0"}
+          className="text-blue-400"
+        />
+        <MetricCard
+          title="BTC Balance"
+          value={vaultData?.btc_balance ? `${convertFromDecimals(vaultData.btc_balance, 'BTC').toFixed(8)} BTC` : "0 BTC"}
+          className="text-orange-400"
         />
       </div>
 
-      {/* Vault Performance & Risk Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gray-700/50 p-4 rounded-lg">
-          <h4 className="font-semibold mb-3">Performance Metrics</h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Total Return</span>
-              <span className="font-semibold text-green-400">+0%</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Win Rate</span>
-              <span className="font-semibold">{tradeMetrics.winRate}%</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Sharpe Ratio</span>
-              <span className="font-semibold">{tradeMetrics.sharpeRatio.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Avg Daily Return</span>
-              <span className="font-semibold text-green-400">
-                +{((45.2 - (season.aiModels?.findIndex((m: any) => m.name === model.name) || 0) * 8) / 365).toFixed(3)}%
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-gray-700/50 p-4 rounded-lg">
-          <h4 className="font-semibold mb-3">Risk Metrics</h4>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Max Drawdown</span>
-              <span className="font-semibold text-red-400">{tradeMetrics.maxDrawdown.toFixed(1)}%</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Volatility</span>
-              <span className="font-semibold">
-                {(12.5 + (season.aiModels?.findIndex((m: any) => m.name === model.name) || 0) * 3.1).toFixed(1)}%
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Risk Score</span>
-              <span className="font-semibold text-yellow-400">
-                {3 + (season.aiModels?.findIndex((m: any) => m.name === model.name) || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Beta</span>
-              <span className="font-semibold">
-                {(0.8 + (season.aiModels?.findIndex((m: any) => m.name === model.name) || 0) * 0.1).toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <AssetAllocation
         assetAllocation={assetAllocation}
