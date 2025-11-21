@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useCurrentAccount } from '@mysten/dapp-kit';
 import { DataAdapter } from '@/data/dataAdapter';
-import { PortfolioHolding } from '@/data/mockData';
+import { PortfolioHolding } from '@/data/dataModel';
 
 export interface AIVault {
   aiModel: string;

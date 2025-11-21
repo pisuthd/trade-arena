@@ -329,48 +329,45 @@ export class DataAdapter {
             const tradeHistory = vaultFields.trade_history || [];
             formattedAIModels[modelIndex].trades = tradeHistory.length;
 
-            // Calculate PnL based on individual trade performance
-            let totalTradePnL = 0;
-            let profitableTrades = 0;
-
-            tradeHistory.forEach((trade: any) => {
+            // Format trade history for easier access in components
+            const formattedTradeHistory = tradeHistory.map((trade: any) => {
               const tradeFields = trade.fields;
-              const action = tradeFields.action;
-              const entryPrice = Number(tradeFields.entry_price) / 1e8; // Convert from decimals
-              const btcAmount = convertFromDecimals(Number(tradeFields.btc_amount || 0), 'BTC');
-              const usdcAmount = convertFromDecimals(Number(tradeFields.usdc_amount || 0), 'USDC');
-
-              if (action === 'LONG') {
-                // For LONG trades: PnL = (Current Price - Entry Price) * BTC Amount
-                const tradePnL = (btcPrice - entryPrice) * btcAmount;
-                totalTradePnL += tradePnL;
-                
-                if (btcPrice > entryPrice) {
-                  profitableTrades++;
-                }
-              } else if (action === 'SHORT') {
-                // For SHORT trades: PnL = (Entry Price - Current Price) * BTC Amount
-                const tradePnL = (entryPrice - btcPrice) * btcAmount;
-                totalTradePnL += tradePnL;
-                
-                if (btcPrice < entryPrice) {
-                  profitableTrades++;
-                }
-              }
-              // Note: CLOSE trades would need different logic, but we don't see them in the data
+              return {
+                timestamp: tradeFields.timestamp,
+                action: tradeFields.action,
+                usdcAmount: parseFloat(tradeFields.usdc_amount) / 1000000, // Convert from 6 decimals
+                btcAmount: parseFloat(tradeFields.btc_amount) / 100000000, // Convert from 8 decimals
+                entryPrice: parseFloat(tradeFields.entry_price) / 100000000, // Convert from 8 decimals
+                reasoning: tradeFields.reasoning,
+                confidence: tradeFields.confidence,
+              };
             });
+
+            // Add formatted trade history to model
+            formattedAIModels[modelIndex].tradeHistory = formattedTradeHistory;
 
             // Current vault value (already calculated as TVL)
             const currentVaultValue = formattedAIModels[modelIndex].tvl;
 
-            // For PnL calculation, we use the trade-based PnL which represents actual trading performance
-            const pnl = totalTradePnL;
-            
-            // Use hardcoded initial deposit of 3000 USDC for PnL percentage calculation
+            // Simple P&L calculation: Current Value - Initial Deposit ($3,000)
             const initialDeposit = 3000;
+            const pnl = currentVaultValue - initialDeposit;
             const pnlPercentage = (pnl / initialDeposit) * 100;
 
-            // Calculate win rate
+            // Calculate win rate based on trade history
+            let profitableTrades = 0;
+            tradeHistory.forEach((trade: any) => {
+              const tradeFields = trade.fields;
+              const action = tradeFields.action;
+              const entryPrice = Number(tradeFields.entry_price) / 1e8; // Convert from decimals
+
+              if (action === 'LONG' && btcPrice > entryPrice) {
+                profitableTrades++;
+              } else if (action === 'SHORT' && btcPrice < entryPrice) {
+                profitableTrades++;
+              }
+            });
+
             const winRate = tradeHistory.length > 0 ? (profitableTrades / tradeHistory.length) * 100 : 0;
 
             // Update model with performance data

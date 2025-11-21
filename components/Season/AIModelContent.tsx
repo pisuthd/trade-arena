@@ -2,8 +2,7 @@ import React from 'react';
 import { MetricCard } from '../UI';
 import { VaultTab } from '../Vault';
 import { TradesTab } from '../Trades';
-import { PerformanceTab } from '../Performance';
-import OverviewTab from './OverviewTab';
+import { PerformanceTab } from '../Performance'; 
 
 interface AIModelContentProps {
   model: any;
@@ -112,16 +111,16 @@ export default function AIModelContent({
             formatCurrency={formatCurrency}
             formatTradeTime={(timestamp: string) => {
               const ts = parseInt(timestamp);
-              const date = new Date(ts / 1000);
+              const date = new Date(ts); // Remove the incorrect division by 1000
               const now = new Date();
               const diffMs = now.getTime() - date.getTime();
               const diffMins = Math.floor(diffMs / (1000 * 60));
               const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
               const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
               
-              if (diffMins < 60) return `${diffMins} min ago`;
-              if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-              return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+              if (diffMins < 60) return `${diffMins}m ago`;
+              if (diffHours < 24) return `${diffHours}h ago`;
+              return `${diffDays}d ago`;
             }}
           />
         )}
@@ -129,6 +128,7 @@ export default function AIModelContent({
         {activeContentTab === 'performance' && (
           <PerformanceTab
             model={model}
+            vaultData={vaultData}
             formatCurrency={formatCurrency}
           />
         )}

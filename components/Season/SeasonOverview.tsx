@@ -28,7 +28,7 @@ export default function SeasonOverview({
         />
         <MetricCard
           title="Scheduled Ending"
-          value={season.startedAt ? formatDate(new Date(new Date(season.startedAt).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()) : 'N/A'}
+          value={(season.startedAt && season.startedAt !=="None") ? formatDate(new Date(new Date(season.startedAt).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()) : 'N/A'}
         />
         <MetricCard
           title="Ended"
