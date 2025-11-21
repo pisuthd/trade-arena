@@ -31,7 +31,18 @@ export default function AIModelTabs({
             }`}
           >
             <div className="flex items-center justify-center space-x-2">
-              <span className="text-lg">{getModelEmoji(model.name)}</span>
+              <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                <img 
+                  src={
+                    model.name === 'NOVA' ? '/amazon-nova.png' :
+                    model.name === 'CLAUDE' ? '/claude-icon.png' :
+                    model.name === 'LLAMA' ? '/llama-icon.png' :
+                    '/amazon-nova.png' // fallback
+                  }
+                  alt={DataAdapter.getModelDisplayName(model.name)}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <span>{DataAdapter.getModelDisplayName(model.name)}</span>
               <StatusBadge
                 type="ai"

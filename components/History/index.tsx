@@ -351,7 +351,18 @@ export default function HistoryContainer() {
                 {/* Header */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-4">
-                    <div className="text-3xl">{getModelEmoji(item.aiModel)}</div>
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                      <img 
+                        src={
+                          item.aiModel === 'NOVA' ? '/amazon-nova.png' :
+                          item.aiModel === 'CLAUDE' ? '/claude-icon.png' :
+                          item.aiModel === 'LLAMA' ? '/llama-icon.png' :
+                          '/amazon-nova.png' // fallback
+                        }
+                        alt={item.aiModel}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <div>
                       <div className="flex items-center space-x-3 mb-1">
                         <span className={`px-3 py-1 rounded-lg text-sm font-bold ${

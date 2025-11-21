@@ -98,7 +98,18 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-800">
             <div className="flex items-center space-x-3">
-              <div className="text-3xl">{modelEmoji}</div>
+              <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                <img 
+                  src={
+                    modelName === 'NOVA' ? '/amazon-nova.png' :
+                    modelName === 'CLAUDE' ? '/claude-icon.png' :
+                    modelName === 'LLAMA' ? '/llama-icon.png' :
+                    '/amazon-nova.png' // fallback
+                  }
+                  alt={modelName}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div>
                 <h3 className="text-xl font-bold">Deposit to {modelName}</h3> 
               </div>

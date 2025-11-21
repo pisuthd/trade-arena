@@ -222,7 +222,18 @@ export default function PortfolioPage() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
-                    <div className="text-3xl">{getModelEmoji(holding.aiName)}</div>
+                    <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0">
+                      <img 
+                        src={
+                          holding.aiName === 'NOVA' ? '/amazon-nova.png' :
+                          holding.aiName === 'CLAUDE' ? '/claude-icon.png' :
+                          holding.aiName === 'LLAMA' ? '/llama-icon.png' :
+                          '/amazon-nova.png' // fallback
+                        }
+                        alt={holding.aiName}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <div>
                       <div className="flex items-center space-x-3 mb-1">
                         <h3 className="text-lg font-semibold">{holding.aiName} Vault</h3>
