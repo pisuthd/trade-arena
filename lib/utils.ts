@@ -66,3 +66,24 @@ export function truncateAddress(address: string, startChars = 4, endChars = 4): 
   if (!address) return '';
   return `${address.slice(0, startChars)}...${address.slice(-endChars)}`;
 }
+
+export function parseWalrusBlobId(blobIdArray: number[]): string {
+  if (!blobIdArray || !Array.isArray(blobIdArray) || blobIdArray.length === 0) {
+    return '';
+  }
+  
+  // Convert byte array to UTF-8 string
+  try {
+    const uint8Array = new Uint8Array(blobIdArray);
+    return new TextDecoder('utf-8').decode(uint8Array);
+  } catch (error) {
+    console.error('Error decoding blob ID:', error);
+    return '';
+  }
+}
+
+export function truncateBlobId(blobId: string, startChars = 6, endChars = 4): string {
+  if (!blobId) return '';
+  if (blobId.length <= startChars + endChars + 3) return blobId;
+  return `${blobId.slice(0, startChars)}...${blobId.slice(-endChars)}`;
+}
