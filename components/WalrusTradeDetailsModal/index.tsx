@@ -106,12 +106,10 @@ export default function WalrusTradeDetailsModal({
   };
 
   const handleClose = () => {
-    if (!isLoading) {
-      setWalrusData(null);
-      setError(null);
-      setShowFullJson(false);
-      onClose();
-    }
+    setWalrusData(null);
+    setError(null);
+    setShowFullJson(false);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -145,8 +143,7 @@ export default function WalrusTradeDetailsModal({
             </div>
             <button
               onClick={handleClose}
-              disabled={isLoading}
-              className="text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+              className="text-gray-400 hover:text-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

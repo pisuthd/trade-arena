@@ -11,6 +11,7 @@ export interface Trade {
   confidence: number;
   reasoning: string;
   time: string;
+  walrus_blob_id?: number[];
 }
 
 export interface VaultValue {
@@ -27,6 +28,10 @@ export interface AIModel {
   change: number;
   color: string;
   emoji?: string;
+  tvl?: number;
+  pnl?: number;
+  trades?: number;
+  rank?: number;
 }
 
 // Portfolio and season data structures
@@ -75,6 +80,7 @@ export interface SeasonData {
     event: string;
     type: string;
   }[];
+  rawContractData?: any; // Raw smart contract data for detailed processing
 }
 
 export interface HistoricalTrade {

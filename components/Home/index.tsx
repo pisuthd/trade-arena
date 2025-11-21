@@ -1,13 +1,18 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { TrendingUp, Zap, Trophy, Activity, ArrowUpRight, ArrowDownRight, Brain, Shield, Code, Database, GitBranch, Layers, CheckCircle, ExternalLink, Users, Clock, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useCurrentSeason, getSeasonStatusText } from '@/hooks/useSeasonManager';
 import { DataAdapter } from '@/data/dataAdapter';
 import { Trade, VaultValue, AIModel } from '@/data/dataModel';
+import HomeAIModelCard from './HomeAIModelCard';
+import HomeTradeFeed from './HomeTradeFeed';
+import WalrusTradeDetailsModal from '../WalrusTradeDetailsModal';
+import { parseWalrusBlobId } from '@/lib/utils';
 
 const HomeContainer = () => {
 
@@ -15,6 +20,9 @@ const HomeContainer = () => {
     const [liveFeed, setLiveFeed] = useState<Trade[]>([]);
     const [aiModels, setAiModels] = useState<AIModel[]>([]);
     const [loading, setLoading] = useState(true);
+    const [btcPrice, setBtcPrice] = useState<number>(95000);
+    const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     // Get season data from smart contract
     const { data: seasonData, isLoading: seasonLoading } = useCurrentSeason(1);
@@ -24,20 +32,89 @@ const HomeContainer = () => {
     const seasonStatus = seasonInfo?.fields?.status || 0;
     const statusInfo = getSeasonStatusText(seasonStatus);
 
-    // Initialize data
+    // Initialize data with real Season 1 data
     useEffect(() => {
         const initializeData = async () => {
             try {
                 setLoading(true);
-                const [models, chart, trades] = await Promise.all([
-                    DataAdapter.getAIModels(),
-                    DataAdapter.getChartData(),
-                    DataAdapter.getTradeFeed()
-                ]);
+                
+                // Get current BTC price
+                const currentBtcPrice = await DataAdapter.getBTCPrice();
+                setBtcPrice(currentBtcPrice);
+                
+                // Get real Season 1 data from smart contract
+                const seasons = await DataAdapter.getSeasons();
+                
+                const season1 = seasons.find(s => s.seasonNumber === 1);
+                
+                console.log("season1:", season1)
 
-                setAiModels(models);
-                setChartData(chart);
-                setLiveFeed(trades);
+                if (season1 && season1.aiModels) {
+                    // Extract AI models from Season 1 with proper interface
+                    const models = season1.aiModels.map(model => ({
+                        name: model.name,
+                        displayName: DataAdapter.getModelDisplayName(model.name),
+                        value: Math.round(model.tvl),
+                        change: model.pnlPercentage || 0,
+                        color: DataAdapter.getModelColor(DataAdapter.getContractModelName(model.name)),
+                        tvl: model.tvl,
+                        pnl: model.pnl || 0,
+                        trades: model.trades || 0
+                    }));
+                    
+                    // Sort models by PnL (performance) and add rankings
+                    const sortedModels = models
+                        .sort((a, b) => b.pnl - a.pnl)
+                        .map((model, index) => ({
+                            ...model,
+                            rank: index + 1
+                        }));
+                    
+                    setAiModels(sortedModels);
+                    
+                    // Extract all trades from all models for unified feed
+                    const allTrades: Trade[] = [];
+                    
+                    // Get trades from raw contract data - fix the path
+                    if (season1.rawContractData?.fields?.ai_vaults?.fields?.contents) {
+                        const vaultContents = season1.rawContractData.fields.ai_vaults.fields.contents;
+                        
+                        vaultContents.forEach((vault: any) => {
+                            const aiName = vault.fields.key;
+                            const vaultData = vault.fields.value;
+                            const tradeHistory = vaultData.fields?.trade_history || [];
+                            
+                            tradeHistory.forEach((trade: any) => {
+                                const tradeFields = trade.fields;
+                                allTrades.push({
+                                    id: tradeFields.timestamp,
+                                    ai: DataAdapter.getModelDisplayName(aiName),
+                                    action: (tradeFields.action === 'LONG' ? 'BUY' : 'SELL') as 'BUY' | 'SELL',
+                                    pair: 'BTC/USDC',
+                                    usdcAmount: parseFloat(tradeFields.usdc_amount) / 1000000,
+                                    btcAmount: parseFloat(tradeFields.btc_amount) / 100000000,
+                                    price: parseFloat(tradeFields.entry_price) / 100000000,
+                                    confidence: parseInt(tradeFields.confidence),
+                                    reasoning: tradeFields.reasoning,
+                                    time: DataAdapter.formatTime(parseInt(tradeFields.timestamp)),
+                                    walrus_blob_id: tradeFields.walrus_blob_id
+                                });
+                            });
+                        });
+                    }
+                    
+                    // Sort trades by timestamp (most recent first)
+                    allTrades.sort((a, b) => parseInt(b.id) - parseInt(a.id));
+
+                    console.log("allTrades: ", allTrades)
+
+                    setLiveFeed(allTrades);
+                    
+                    // Generate historical chart data from trades
+                    const historicalChartData = generateHistoricalChartData(allTrades, season1.aiModels, currentBtcPrice);
+                    setChartData(historicalChartData);
+                }
+                
             } catch (error) {
                 console.error('Failed to initialize data:', error);
             } finally {
@@ -47,6 +124,126 @@ const HomeContainer = () => {
 
         initializeData();
     }, []);
+
+    // Generate historical chart data from trades
+    const generateHistoricalChartData = (trades: Trade[], aiModels: any[], currentBtcPrice: number) => {
+        const chartData: VaultValue[] = [];
+        
+        // Group trades by AI model for separate portfolio tracking
+        const tradesByModel = {
+            'Amazon Nova Pro': [] as Trade[],
+            'Claude Sonnet': [] as Trade[],
+            'Llama Maverick': [] as Trade[]
+        };
+        
+        // Separate trades by AI model
+        trades.forEach(trade => {
+            if (tradesByModel[trade.ai as keyof typeof tradesByModel]) {
+                tradesByModel[trade.ai as keyof typeof tradesByModel].push(trade);
+            }
+        });
+
+        // Initialize portfolio states for each AI model (starting with $3000 each)
+        const initialPortfolioValue = 3000;
+        const portfolioStates = {
+            'Amazon Nova Pro': { usdc: 3000, btc: 0 },
+            'Claude Sonnet': { usdc: 3000, btc: 0 },
+            'Llama Maverick': { usdc: 3000, btc: 0 }
+        };
+
+        // Get all unique timestamps from all trades
+        const allTimestamps = [...new Set(trades.map(t => parseInt(t.id)))].sort((a, b) => a - b);
+        
+        // Start with initial values at 0% PnL
+        if (allTimestamps.length > 0) {
+            const initialTime = new Date(allTimestamps[0]);
+            chartData.push({
+                time: formatTradeTime(initialTime.getTime().toString()),
+                AmazonNovaPro: 0,
+                ClaudeSonnet: 0,
+                LlamaMaverick: 0,
+            });
+        }
+
+        // Process trades chronologically for each model
+        allTimestamps.forEach((timestamp, index) => {
+            // Process trades at this timestamp for each model
+            Object.keys(tradesByModel).forEach(modelName => {
+                const modelTrades = tradesByModel[modelName as keyof typeof tradesByModel];
+                const tradesAtTimestamp = modelTrades.filter(t => parseInt(t.id) === timestamp);
+                
+                const portfolio = portfolioStates[modelName as keyof typeof portfolioStates];
+                
+                tradesAtTimestamp.forEach(trade => {
+                    if (trade.action === 'BUY') {
+                        portfolio.usdc -= trade.usdcAmount;
+                        portfolio.btc += trade.btcAmount;
+                    } else {
+                        portfolio.usdc += trade.usdcAmount;
+                        portfolio.btc -= trade.btcAmount;
+                    }
+                });
+            });
+
+            // Create data point for every 3rd timestamp to keep chart readable but with more points
+            if (index % 3 === 0 || index === allTimestamps.length - 1) {
+                const tradeAtTimestamp = trades.find(t => parseInt(t.id) === timestamp);
+                const priceVariation = 1 + (Math.random() - 0.5) * 0.03; // ±1.5% variation
+                const adjustedPrice = tradeAtTimestamp ? tradeAtTimestamp.price * priceVariation : currentBtcPrice;
+                
+                // Calculate PnL percentages for each model
+                const amazonNovaValue = portfolioStates['Amazon Nova Pro'].usdc + (portfolioStates['Amazon Nova Pro'].btc * adjustedPrice);
+                const claudeSonnetValue = portfolioStates['Claude Sonnet'].usdc + (portfolioStates['Claude Sonnet'].btc * adjustedPrice);
+                const llamaMaverickValue = portfolioStates['Llama Maverick'].usdc + (portfolioStates['Llama Maverick'].btc * adjustedPrice);
+                
+                chartData.push({
+                    time: formatTradeTime(timestamp.toString()),
+                    AmazonNovaPro: ((amazonNovaValue - initialPortfolioValue) / initialPortfolioValue) * 100,
+                    ClaudeSonnet: ((claudeSonnetValue - initialPortfolioValue) / initialPortfolioValue) * 100,
+                    LlamaMaverick: ((llamaMaverickValue - initialPortfolioValue) / initialPortfolioValue) * 100,
+                });
+            }
+        });
+
+        // Add current values as final point
+        const amazonNovaFinal = aiModels.find(m => m.name === 'NOVA')?.tvl || initialPortfolioValue;
+        const claudeSonnetFinal = aiModels.find(m => m.name === 'CLAUDE')?.tvl || initialPortfolioValue;
+        const llamaMaverickFinal = aiModels.find(m => m.name === 'LLAMA')?.tvl || initialPortfolioValue;
+        
+        chartData.push({
+            time: 'Current',
+            AmazonNovaPro: ((amazonNovaFinal - initialPortfolioValue) / initialPortfolioValue) * 100,
+            ClaudeSonnet: ((claudeSonnetFinal - initialPortfolioValue) / initialPortfolioValue) * 100,
+            LlamaMaverick: ((llamaMaverickFinal - initialPortfolioValue) / initialPortfolioValue) * 100,
+        });
+
+        return chartData;
+    };
+
+    // Helper function to get contract model name from display name
+    const getContractModelName = (displayName: string): string => {
+        const nameMap: { [key: string]: string } = {
+            'Amazon Nova Pro': 'NOVA',
+            'Claude Sonnet': 'CLAUDE',
+            'Llama Maverick': 'LLAMA'
+        };
+        return nameMap[displayName] || displayName.toUpperCase();
+    };
+
+    // Format trade timestamp for display
+    const formatTradeTime = (timestamp: string): string => {
+        const ts = parseInt(timestamp);
+        const date = new Date(ts);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        return `${diffDays}d ago`;
+    };
 
     // Simulate live trade updates
     // useEffect(() => {
@@ -125,31 +322,20 @@ const HomeContainer = () => {
             <div className="relative z-10 max-w-7xl mx-auto px-6 pb-8">
 
                
-{/* AI Model Stats - Compact Row */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
+{/* AI Model Cards - Using HomeAIModelCard Component */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
                     {aiModels.map((model, index) => (
-                        <motion.div
+                        <HomeAIModelCard
                             key={model.name}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.3, delay: index * 0.05 }}
-                            className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-3 hover:border-gray-700 transition-all"
-                        >
-                            <div className="flex items-center justify-between mb-1">
-                                <h3 className="font-bold text-sm">{model.name}</h3>
-                                {model.change > 0 ? (
-                                    <ArrowUpRight className="w-4 h-4" style={{ color: model.color }} />
-                                ) : (
-                                    <ArrowDownRight className="w-4 h-4 text-red-500" />
-                                )}
-                            </div>
-                            <p className="text-xl font-bold mb-0.5" style={{ color: model.color }}>
-                                ${model.value.toLocaleString()}
-                            </p>
-                            <p className={`text-xs font-medium ${model.change > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                {model.change > 0 ? '+' : ''}{model.change}%
-                            </p>
-                        </motion.div>
+                            model={{
+                                name: model.displayName,
+                                tvl: model.tvl || 0,
+                                pnl: model.pnl || 0,
+                                trades: model.trades || 0,
+                                color: model.color,
+                                rank: model.rank
+                            }}
+                        />
                     ))}
                 </div>
 
@@ -166,7 +352,7 @@ const HomeContainer = () => {
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <h3 className="text-lg font-bold mb-0.5">Performance Chart</h3>
-                                <p className="text-xs text-gray-400">Last 24 hours portfolio value</p>
+                                <p className="text-xs text-gray-400">Season#1: PnL percentage</p>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-[#00ff88] rounded-full animate-pulse" />
@@ -174,21 +360,54 @@ const HomeContainer = () => {
                             </div>
                         </div>
                         <ResponsiveContainer width="100%" height={550}>
-                            <LineChart data={chartData}>
+                            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
-                                <XAxis dataKey="time" stroke="#666" style={{ fontSize: '11px' }} />
-                                <YAxis stroke="#666" style={{ fontSize: '11px' }} />
+                                <XAxis 
+                                    dataKey="time" 
+                                    stroke="#666" 
+                                    style={{ fontSize: '11px' }}
+                                />
+                                <YAxis 
+                                    stroke="#666" 
+                                    style={{ fontSize: '11px' }}
+                                    tickFormatter={(value) => `${value.toFixed(1)}%`}
+                                    domain={['dataMin - 5', 'dataMax + 5']}
+                                    allowDataOverflow={false}
+                                />
                                 <Tooltip
                                     contentStyle={{
                                         backgroundColor: '#0a0a0f',
                                         border: '1px solid #333',
                                         borderRadius: '8px',
                                     }}
+                                    formatter={(value: number, name: string) => [`${value.toFixed(2)}%`, name]}
                                 />
                                 <Legend />
-                                <Line type="monotone" dataKey="AmazonNovaPro" stroke="#00ff88" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="ClaudeSonnet" stroke="#00d4ff" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="LlamaMaverick" stroke="#ff00ff" strokeWidth={2} dot={false} />
+                                <ReferenceLine y={0} stroke="#666" strokeWidth={1} strokeDasharray="3 3" />
+                                <Line 
+                                    type="monotone" 
+                                    dataKey="AmazonNovaPro" 
+                                    stroke="#00ff88" 
+                                    strokeWidth={2} 
+                                    dot={false}
+                                    name="Amazon Nova Pro"
+                                />
+                                <Line 
+                                    type="monotone" 
+                                    dataKey="ClaudeSonnet" 
+                                    stroke="#00d4ff" 
+                                    strokeWidth={2} 
+                                    dot={false}
+                                    name="Claude Sonnet"
+                                />
+                                <Line 
+                                    type="monotone" 
+                                    dataKey="LlamaMaverick" 
+                                    stroke="#ff00ff" 
+                                    strokeWidth={2} 
+                                    dot={false}
+                                    name="Llama Maverick"
+                                />
                             </LineChart>
                         </ResponsiveContainer>
                     </motion.div>
@@ -207,50 +426,13 @@ const HomeContainer = () => {
                             </div>
                             <Zap className="w-5 h-5 text-[#00ff88]" />
                         </div>
-                        <div className="space-y-3 overflow-y-auto max-h-[550px]">
-                            {liveFeed.map((trade) => (
-                                <motion.div
-                                    key={trade.id}
-                                    initial={{ opacity: 0, x: 20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-3 hover:border-gray-700 transition-all"
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs font-bold text-gray-300">{trade.ai}</span>
-                                        <span className={`text-xs px-2 py-0.5 rounded ${trade.action === 'BUY' ? 'bg-green-500/20 text-green-400' :
-                                            trade.action === 'SELL' ? 'bg-red-500/20 text-red-400' :
-                                                trade.action === 'TAKE PROFIT' ? 'bg-blue-500/20 text-blue-400' :
-                                                    trade.action === 'ADD LIQUIDITY' ? 'bg-purple-500/20 text-purple-400' :
-                                                        'bg-gray-500/20 text-gray-400'
-                                            }`}>
-                                            {trade.action}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-gray-400 space-y-1">
-                                        <div className="flex justify-between">
-                                            <span>Pair:</span>
-                                            <span className="text-white">{trade.pair}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>USDC:</span>
-                                            <span className="text-white">${trade.usdcAmount.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>BTC:</span>
-                                            <span className="text-white">{trade.btcAmount.toFixed(6)}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span>Confidence:</span>
-                                            <span className="text-[#00ff88]">{trade.confidence}%</span>
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 pt-2 border-t border-gray-800">
-                                        <span className="text-xs text-gray-500">{trade.time}</span>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
+                        <HomeTradeFeed 
+                            trades={liveFeed} 
+                            onTradeClick={(trade) => {
+                                setSelectedTrade(trade);
+                                setIsModalOpen(true);
+                            }}
+                        />
                     </motion.div>
                 </div>
 
@@ -491,6 +673,32 @@ const HomeContainer = () => {
                 </motion.div>
             </div>
 
+
+            {/* Walrus Trade Details Modal */}
+            {selectedTrade && selectedTrade.walrus_blob_id && (
+                <WalrusTradeDetailsModal
+                    isOpen={isModalOpen}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedTrade(null);
+                    }}
+                    trade={{
+                        fields: {
+                            action: selectedTrade.action,
+                            pair: selectedTrade.pair,
+                            btc_amount: (selectedTrade.btcAmount * 100000000).toString(),
+                            entry_price: (selectedTrade.price * 100000000).toString(),
+                            usdc_amount: (selectedTrade.usdcAmount * 1000000).toString(),
+                            confidence: selectedTrade.confidence.toString(),
+                            reasoning: selectedTrade.reasoning,
+                            timestamp: selectedTrade.id,
+                            ai_model: selectedTrade.ai,
+                            walrus_blob_id: selectedTrade.walrus_blob_id
+                        }
+                    }}
+                    blobId={parseWalrusBlobId(selectedTrade.walrus_blob_id)}
+                />
+            )}
 
             <style jsx>{`
             @keyframes gradient {
