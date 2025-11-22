@@ -133,11 +133,11 @@ export default function WalrusTradeDetailsModal({
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-800">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
+              {/* <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
                 <Eye className="w-6 h-6 text-purple-400" />
-              </div>
+              </div> */}
               <div>
-                <h3 className="text-xl font-bold">AI Trade Audit & Verification</h3>
+                <h3 className="text-xl font-bold">AI Trade History</h3>
                 <p className="text-sm text-gray-400">Verify every AI decision and trade on-chain with immutable Walrus proof </p>
               </div>
             </div>
