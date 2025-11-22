@@ -1,5 +1,5 @@
-import HistoryContainer from "@/components/History";
+import AgentThinking from "@/components/AgentThinking";
 
 export default function HistoryPage() {
-  return <HistoryContainer />;
+  return <AgentThinking />;
 }

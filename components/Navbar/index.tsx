@@ -9,7 +9,7 @@ import WalletConnect from '@/components/WalletConnect';
 const navItems = [
   { href: '/', label: 'Home' },
   { href: '/season', label: 'Season' },
-  { href: '/portfolio', label: 'Portfolio' },
+  // { href: '/portfolio', label: 'Portfolio' },
   { href: '/history', label: 'History' },
 ];
 
