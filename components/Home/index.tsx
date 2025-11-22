@@ -428,7 +428,7 @@ const HomeContainer = () => {
                         </div>
                         <HomeTradeFeed 
                             trades={liveFeed} 
-                            onTradeClick={(trade) => {
+                            onTradeClick={(trade: any) => {
                                 setSelectedTrade(trade);
                                 setIsModalOpen(true);
                             }}
