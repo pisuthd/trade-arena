@@ -1,4 +1,3 @@
-
 import asyncio
 import logging
 import sys
@@ -11,6 +10,7 @@ from strands.multiagent import Swarm
 from strands.session.s3_session_manager import S3SessionManager
 import boto3
 from strands_tools import http_request
+from strands.models import BedrockModel
 
 boto_session = boto3.Session(region_name="us-east-1")
 
@@ -36,7 +36,10 @@ session_manager = S3SessionManager(
     bucket="trade-arena-sessions",
     prefix="dev/",
     boto_session=boto_session,  
-    region_name="us-east-1"  
+    region_name="us-east-1",
+    ttl_seconds=3600 * 24 * 3,  # 3 days TTL
+    max_session_size_mb=50,  # 50MB limit
+    cleanup_policy="auto"
 )
 
 with mcp_client:
@@ -75,7 +78,7 @@ with mcp_client:
             "Do the following:\n"
             "1. Search for recent BTC-related news using http_request (regulation, institutional moves, tech updates, macro events, market sentiment).\n"
             "2. Classify each item as bullish, bearish, or neutral.\n"
-            "3. Provide a concise summary of the overall news impact and whether it supports or contradicts technical signals.\n\n"
+            "3. Provide a concise summary of overall news impact and whether it supports or contradicts technical signals.\n\n"
             "Always include credible sources and briefly estimate potential market impact."
         ),
         tools=[http_request]
@@ -119,6 +122,94 @@ with mcp_client:
     
     logger.info("✅ Trading research completed successfully")
 
+    # Phase 2: Models independently analyze the swarm output and execute transactions
+
+    logger.info("🤖 Starting Phase 2: Individual AI Trading Execution")
     
+    claude_agent = Agent(
+        name="claude_trading_agent", 
+        agent_id="claude_trading_agent", 
+        tools=[sui_tools],  
+        model=(BedrockModel(
+            model_id="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+            boto_session=boto_session
+        )),
+        session_manager=session_manager
+    )
 
+    nova_agent = Agent(
+        name="nova_trading_agent", 
+        agent_id="nova_trading_agent", 
+        tools=[sui_tools],  
+        model=(BedrockModel(
+            model_id="us.amazon.nova-pro-v1:0",
+            boto_session=boto_session
+        )),
+        session_manager=session_manager
+    )
 
+    llama_agent = Agent(
+        name="llama_trading_agent", 
+        agent_id="llama_trading_agent", 
+        tools=[sui_tools],  
+        model=(BedrockModel(
+            model_id="us.meta.llama4-maverick-17b-instruct-v1:0",
+            boto_session=boto_session
+        )),
+        session_manager=session_manager
+    )
+    
+    # Create the trading prompt for each agent
+    trading_prompt = f"""
+You are an AI trading agent competing in Season 1 of a 3-agent BTC trading league (CLAUDE, NOVA, LLAMA).
+
+Access the market research using your session context, then execute the optimal BTC trade.
+
+YOUR TASK:
+1. Analyze your competitive position and market conditions
+2. Determine the optimal trading strategy (LONG/SHORT) - you MUST take a position
+3. Decide position size based on risk management and your competitive situation
+4. Execute the trade using the available MCP tools:
+   - trade_arena_walrus_store: Store your trade reasoning and data
+   - trade_arena_ai_execute_long: Execute LONG positions
+   - trade_arena_ai_execute_short: Execute SHORT positions
+5. Provide your reasoning, confidence level, and execution details
+
+EXECUTION REQUIREMENTS:
+- Always store your trade data on Walrus first with detailed reasoning
+- Then execute the trade using the appropriate execution tool
+- Include your AI model name, confidence level, and strategic reasoning
+- Consider your current ranking and competitive position
+- Manage risk appropriately based on your situation
+- YOU MUST EXECUTE A TRADE - no holding positions allowed. Choose either LONG or SHORT based on your analysis.
+
+Execute your trade now!
+"""
+     
+
+    # Execute each agent sequentially
+    logger.info("🎯 Executing CLAUDE trading decision...")
+    claude_result = claude_agent(trading_prompt)
+    print(f"\n{'='*60}")
+    print("🤖 CLAUDE TRADING RESULTS")
+    print(f"{'='*60}")
+    print(str(claude_result))
+    
+    logger.info("🚀 Executing NOVA trading decision...")
+    nova_result = nova_agent(trading_prompt)
+    print(f"\n{'='*60}")
+    print("🚀 NOVA TRADING RESULTS")
+    print(f"{'='*60}")
+    print(str(nova_result))
+    
+    logger.info("🔥 Executing LLAMA trading decision...")
+    llama_result = llama_agent(trading_prompt)
+    print(f"\n{'='*60}")
+    print("🔥 LLAMA TRADING RESULTS")
+    print(f"{'='*60}")
+    print(str(llama_result))
+    
+    # Final summary
+    print(f"\n{'='*80}")  
+    print(f"Total Agent Executions: 4 (1 swarm + 3 individual)")
+    logger.info("✅ All AI trading executions completed successfully")
