@@ -12,7 +12,9 @@ import {
   TrendingUp,
   Zap,
   Eye,
-  MessageSquare
+  MessageSquare,
+  Cloud,
+  Bot
 } from 'lucide-react';
 import { useSwarmData, SwarmData } from '../hooks/useSwarmData';
 
@@ -83,34 +85,12 @@ export default function SwarmTab() {
         animate={{ opacity: 1, y: 0 }}
         className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6"
       >
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[#00ff88]/20 to-[#00d4ff]/20 flex items-center justify-center">
-              <Users className="w-6 h-6 text-[#00ff88]" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Swarm Intelligence</h2>
-              <p className="text-gray-400 text-sm">Multi-agent BTC market analysis</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className={`px-3 py-1 rounded-lg text-sm font-medium ${
-              data.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-              data.status === 'running' ? 'bg-blue-500/20 text-blue-400' :
-              'bg-red-500/20 text-red-400'
-            }`}>
-              {data.status === 'completed' && <CheckCircle className="w-3 h-3 inline mr-1" />}
-              {data.status === 'running' && <Activity className="w-3 h-3 inline mr-1" />}
-              {data.status === 'failed' && <AlertCircle className="w-3 h-3 inline mr-1" />}
-              {data.status.toUpperCase()}
-            </div>
-          </div>
-        </div>
+       
 
         <div className="grid grid-cols-4 gap-4">
           <div className="bg-[#0a0a0f]/60 border border-gray-800 rounded-lg p-4">
             <div className="flex items-center space-x-2 mb-2">
-              <Brain className="w-4 h-4 text-[#00ff88]" />
+              <Bot className="w-4 h-4 text-[#00ff88]" />
               <span className="text-xs text-gray-400">Active Agents</span>
             </div>
             <p className="text-2xl font-bold text-[#00ff88]">{data.node_history.length}</p>
@@ -180,7 +160,7 @@ export default function SwarmTab() {
       >
         <h3 className="text-lg font-bold mb-4 flex items-center space-x-2">
           <Activity className="w-5 h-5 text-[#00ff88]" />
-          <span>Execution Flow</span>
+          <span>Collaborative Flow</span>
         </h3>
 
         <div className="space-y-3">
@@ -271,7 +251,7 @@ export default function SwarmTab() {
           className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6"
         >
           <h3 className="text-lg font-bold mb-4 flex items-center space-x-2">
-            <Brain className="w-5 h-5 text-[#00d4ff]" />
+            <Cloud className="w-5 h-5 text-[#00d4ff]" />
             <span>Shared Context</span>
           </h3>
 

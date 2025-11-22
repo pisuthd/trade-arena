@@ -16,34 +16,50 @@ interface AgentThinkingProps {
 export default function AgentThinkingContainer({ className = '' }: AgentThinkingProps) {
   const [activeAgent, setActiveAgent] = useState<AgentType>('swarm');
 
+  // Get model icon based on name (same as Home page)
+  const getModelIcon = (modelName: string) => {
+    if (modelName.toLowerCase().includes('claude')) {
+      return '/claude-icon.png';
+    } else if (modelName.toLowerCase().includes('nova') || modelName.toLowerCase().includes('amazon')) {
+      return '/amazon-nova.png';
+    } else if (modelName.toLowerCase().includes('llama')) {
+      return '/llama-icon.png';
+    }
+    return '/claude-icon.png'; // fallback
+  };
+
   const agents = [
     {
       id: 'swarm' as AgentType,
-      name: 'Swarm Intelligence',
+      name: 'Data Swarm',
       icon: Users,
       color: '#00ff88',
-      description: 'Multi-agent BTC market analysis'
+      description: 'Multi-agent market intelligence',
+      image: '/claude-icon.png' // Use a generic icon for swarm
     },
     {
       id: 'claude' as AgentType,
-      name: 'Claude Agent',
+      name: 'Claude Sonnet 4.5',
       icon: Brain,
       color: '#00d4ff',
-      description: 'Claude Sonnet 4.5 trading decisions'
+      description: 'Claude Execution Agent',
+      image: '/claude-icon.png'
     },
     {
       id: 'nova' as AgentType,
-      name: 'Nova Agent',
+      name: 'Amazon Nova Pro',
       icon: Bot,
       color: '#00ff88',
-      description: 'Amazon Nova Pro trading decisions'
+      description: 'Nova Execution Agent',
+      image: '/amazon-nova.png'
     },
     {
       id: 'llama' as AgentType,
-      name: 'Llama Agent',
+      name: 'Llama 4 Maverick',
       icon: Activity,
       color: '#ff00ff',
-      description: 'Llama 4 Maverick trading decisions'
+      description: 'Llama 4 Execution Agent',
+      image: '/llama-icon.png'
     }
   ];
 
@@ -107,16 +123,12 @@ export default function AgentThinkingContainer({ className = '' }: AgentThinking
             className="bg-black/40 backdrop-blur-sm border-b border-gray-800 p-6"
           >
             <div className="flex items-center space-x-4">
-              <div 
-                className="w-12 h-12 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: `${currentAgent?.color}20` }}
-              >
-                {currentAgent?.icon && (
-                  <currentAgent.icon 
-                    className="w-6 h-6" 
-                    style={{ color: currentAgent?.color }}
-                  />
-                )}
+              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                <img 
+                  src={currentAgent?.image} 
+                  alt={currentAgent?.name}
+                  className="w-12 h-12 object-cover"
+                />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">{currentAgent?.name}</h1>

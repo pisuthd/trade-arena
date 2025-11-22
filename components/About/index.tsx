@@ -11,7 +11,7 @@ const AboutContainer = () => {
         { id: 'nova', name: 'Nova Model', role: 'Long BTC', color: '#00ff88', x: 25, y: 25 },
         { id: 'claude', name: 'Claude Model', role: 'Took Profit', color: '#00d4ff', x: 75, y: 25 },
         { id: 'llama', name: 'Llama Model', role: 'Dip Buy', color: '#ff00ff', x: 50, y: 75 },
-        { id: 'coordinator', name: 'Strands Swarm', role: 'Analyze markets collaboratively', color: '#ff6b00', x: 50, y: 50 }
+        { id: 'coordinator', name: 'Data Swarm', role: 'Analyze markets collaboratively', color: '#ff6b00', x: 50, y: 50 }
     ];
 
     const dataFlows = [
@@ -435,7 +435,7 @@ const AboutContainer = () => {
                             {
                                 icon: Bot,
                                 title: 'Vibe Trading',
-                                description: 'Go with the vibe and let AI models trade for you. Choose your favorite AI model, sit back and watch the magic happen.',
+                                description: 'Go with the vibe and let AI models trade for you. Choose your favorite AI model and watch the magic happen.',
                                 color: '#00ff88',
                             },
                             {

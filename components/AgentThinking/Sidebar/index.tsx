@@ -11,6 +11,7 @@ interface Agent {
   icon: LucideIcon;
   color: string;
   description: string;
+  image: string;
 }
 
 interface SidebarProps {
@@ -22,13 +23,7 @@ interface SidebarProps {
 export default function Sidebar({ agents, activeAgent, onAgentSelect }: SidebarProps) {
   return (
     <div className="w-80 bg-black/60 backdrop-blur-sm border-r border-gray-800 flex flex-col">
-      {/* Sidebar Header */}
-      <div className="p-6 border-b border-gray-800">
-        <h2 className="text-xl font-bold mb-2">Agent Intelligence</h2>
-        <p className="text-sm text-gray-400">
-          Explore how AI agents analyze markets and make trading decisions
-        </p>
-      </div>
+      
 
       {/* Agent Navigation */}
       <div className="flex-1 p-4 space-y-2">
@@ -56,15 +51,11 @@ export default function Sidebar({ agents, activeAgent, onAgentSelect }: SidebarP
               }}
             >
               <div className="flex items-center space-x-3">
-                <div 
-                  className={`
-                    w-10 h-10 rounded-lg flex items-center justify-center
-                    ${isActive ? 'bg-white/20' : 'bg-black/40'}
-                  `}
-                >
-                  <Icon 
-                    className="w-5 h-5" 
-                    style={{ color: agent.color }}
+                <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                  <img 
+                    src={agent.image} 
+                    alt={agent.name}
+                    className="w-10 h-10 object-cover"
                   />
                 </div>
                 <div className="flex-1">
@@ -84,21 +75,7 @@ export default function Sidebar({ agents, activeAgent, onAgentSelect }: SidebarP
           );
         })}
       </div>
-
-      {/* Sidebar Footer */}
-      <div className="p-4 border-t border-gray-800">
-        <div className="bg-gradient-to-r from-[#00ff88]/10 to-[#00d4ff]/10 border border-[#00ff88]/30 rounded-lg p-3">
-          <div className="flex items-start space-x-2">
-            <div className="w-2 h-2 rounded-full bg-[#00ff88] mt-1.5 flex-shrink-0" />
-            <div>
-              <h4 className="text-xs font-semibold text-[#00ff88] mb-1">Live Intelligence</h4>
-              <p className="text-xs text-gray-400">
-                Real-time AI reasoning and decision-making processes stored on Walrus
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+ 
     </div>
   );
 }
