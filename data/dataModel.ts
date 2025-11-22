@@ -118,7 +118,7 @@ export const AI_MODELS: AIModel[] = [
   },
   { 
     name: 'LLAMA', 
-    displayName: 'Llama 4 Maverick 17B Instruct',
+    displayName: 'Llama 4 Maverick',
     value: 11200, 
     change: 12.0, 
     color: '#ff00ff' 
@@ -152,7 +152,7 @@ export const INITIAL_TRADES: Trade[] = [
   },
   { 
     id: '3', 
-    ai: 'Llama 4 Maverick 17B Instruct', 
+    ai: 'Llama 4 Maverick', 
     action: 'BUY', 
     pair: 'BTC/USDC', 
     usdcAmount: 450,

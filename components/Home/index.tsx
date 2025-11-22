@@ -23,6 +23,8 @@ const HomeContainer = () => {
     const [btcPrice, setBtcPrice] = useState<number>(95000);
     const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedModelForChart, setSelectedModelForChart] = useState<any>(null);
+    const [singleModelChartData, setSingleModelChartData] = useState<any[]>([]);
 
     // Get season data from smart contract
     const { data: seasonData, isLoading: seasonLoading } = useCurrentSeason(1);
@@ -37,18 +39,16 @@ const HomeContainer = () => {
         const initializeData = async () => {
             try {
                 setLoading(true);
-                
+
                 // Get current BTC price
                 const currentBtcPrice = await DataAdapter.getBTCPrice();
                 setBtcPrice(currentBtcPrice);
-                
+
                 // Get real Season 1 data from smart contract
                 const seasons = await DataAdapter.getSeasons();
-                
-                const season1 = seasons.find(s => s.seasonNumber === 1);
-                
-                console.log("season1:", season1)
 
+                const season1 = seasons.find(s => s.seasonNumber === 1);
+ 
                 if (season1 && season1.aiModels) {
                     // Extract AI models from Season 1 with proper interface
                     const models = season1.aiModels.map(model => ({
@@ -61,7 +61,7 @@ const HomeContainer = () => {
                         pnl: model.pnl || 0,
                         trades: model.trades || 0
                     }));
-                    
+
                     // Sort models by PnL (performance) and add rankings
                     const sortedModels = models
                         .sort((a, b) => b.pnl - a.pnl)
@@ -69,21 +69,21 @@ const HomeContainer = () => {
                             ...model,
                             rank: index + 1
                         }));
-                    
+
                     setAiModels(sortedModels);
-                    
+
                     // Extract all trades from all models for unified feed
                     const allTrades: Trade[] = [];
-                    
+
                     // Get trades from raw contract data - fix the path
                     if (season1.rawContractData?.fields?.ai_vaults?.fields?.contents) {
                         const vaultContents = season1.rawContractData.fields.ai_vaults.fields.contents;
-                        
+
                         vaultContents.forEach((vault: any) => {
                             const aiName = vault.fields.key;
                             const vaultData = vault.fields.value;
                             const tradeHistory = vaultData.fields?.trade_history || [];
-                            
+
                             tradeHistory.forEach((trade: any) => {
                                 const tradeFields = trade.fields;
                                 allTrades.push({
@@ -102,19 +102,26 @@ const HomeContainer = () => {
                             });
                         });
                     }
-                    
+
                     // Sort trades by timestamp (most recent first)
                     allTrades.sort((a, b) => parseInt(b.id) - parseInt(a.id));
-
-                    console.log("allTrades: ", allTrades)
+ 
 
                     setLiveFeed(allTrades);
-                    
+
                     // Generate historical chart data from trades
                     const historicalChartData = generateHistoricalChartData(allTrades, season1.aiModels, currentBtcPrice);
                     setChartData(historicalChartData);
+                    
+                    // Auto-select the first model when data loads
+                    if (sortedModels.length > 0) {
+                        const firstModel = sortedModels[0];
+                        setSelectedModelForChart(firstModel);
+                        const modelChartData = generateSingleModelChartData(firstModel, allTrades, currentBtcPrice);
+                        setSingleModelChartData(modelChartData);
+                    }
                 }
-                
+
             } catch (error) {
                 console.error('Failed to initialize data:', error);
             } finally {
@@ -128,14 +135,14 @@ const HomeContainer = () => {
     // Generate historical chart data from trades
     const generateHistoricalChartData = (trades: Trade[], aiModels: any[], currentBtcPrice: number) => {
         const chartData: VaultValue[] = [];
-        
+
         // Group trades by AI model for separate portfolio tracking
         const tradesByModel = {
             'Amazon Nova Pro': [] as Trade[],
             'Claude Sonnet': [] as Trade[],
             'Llama Maverick': [] as Trade[]
         };
-        
+
         // Separate trades by AI model
         trades.forEach(trade => {
             if (tradesByModel[trade.ai as keyof typeof tradesByModel]) {
@@ -153,7 +160,7 @@ const HomeContainer = () => {
 
         // Get all unique timestamps from all trades
         const allTimestamps = [...new Set(trades.map(t => parseInt(t.id)))].sort((a, b) => a - b);
-        
+
         // Start with initial values at 0% PnL
         if (allTimestamps.length > 0) {
             const initialTime = new Date(allTimestamps[0]);
@@ -171,9 +178,9 @@ const HomeContainer = () => {
             Object.keys(tradesByModel).forEach(modelName => {
                 const modelTrades = tradesByModel[modelName as keyof typeof tradesByModel];
                 const tradesAtTimestamp = modelTrades.filter(t => parseInt(t.id) === timestamp);
-                
+
                 const portfolio = portfolioStates[modelName as keyof typeof portfolioStates];
-                
+
                 tradesAtTimestamp.forEach(trade => {
                     if (trade.action === 'BUY') {
                         portfolio.usdc -= trade.usdcAmount;
@@ -190,12 +197,12 @@ const HomeContainer = () => {
                 const tradeAtTimestamp = trades.find(t => parseInt(t.id) === timestamp);
                 const priceVariation = 1 + (Math.random() - 0.5) * 0.03; // ±1.5% variation
                 const adjustedPrice = tradeAtTimestamp ? tradeAtTimestamp.price * priceVariation : currentBtcPrice;
-                
+
                 // Calculate PnL percentages for each model
                 const amazonNovaValue = portfolioStates['Amazon Nova Pro'].usdc + (portfolioStates['Amazon Nova Pro'].btc * adjustedPrice);
                 const claudeSonnetValue = portfolioStates['Claude Sonnet'].usdc + (portfolioStates['Claude Sonnet'].btc * adjustedPrice);
                 const llamaMaverickValue = portfolioStates['Llama Maverick'].usdc + (portfolioStates['Llama Maverick'].btc * adjustedPrice);
-                
+
                 chartData.push({
                     time: formatTradeTime(timestamp.toString()),
                     AmazonNovaPro: ((amazonNovaValue - initialPortfolioValue) / initialPortfolioValue) * 100,
@@ -209,7 +216,7 @@ const HomeContainer = () => {
         const amazonNovaFinal = aiModels.find(m => m.name === 'NOVA')?.tvl || initialPortfolioValue;
         const claudeSonnetFinal = aiModels.find(m => m.name === 'CLAUDE')?.tvl || initialPortfolioValue;
         const llamaMaverickFinal = aiModels.find(m => m.name === 'LLAMA')?.tvl || initialPortfolioValue;
-        
+
         chartData.push({
             time: 'Current',
             AmazonNovaPro: ((amazonNovaFinal - initialPortfolioValue) / initialPortfolioValue) * 100,
@@ -239,28 +246,87 @@ const HomeContainer = () => {
         const diffMins = Math.floor(diffMs / (1000 * 60));
         const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
         const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-        
+
         if (diffMins < 60) return `${diffMins}m ago`;
         if (diffHours < 24) return `${diffHours}h ago`;
         return `${diffDays}d ago`;
     };
 
-    // Simulate live trade updates
-    // useEffect(() => {
-    //     if (loading) return;
+    // Generate single model chart data based on PerformanceTab logic
+    const generateSingleModelChartData = (model: any, allTrades: Trade[], currentBtcPrice: number) => {
+        const modelTrades = allTrades.filter(trade => trade.ai === model.displayName);
+        
+        if (modelTrades.length === 0) {
+            return [{
+                time: 'Start',
+                value: 3000,
+                timestamp: Date.now()
+            }];
+        }
+        
+        // Sort trades by timestamp
+        const sortedTrades = [...modelTrades].sort((a, b) => 
+            parseInt(a.id) - parseInt(b.id)
+        );
+        
+        // Calculate portfolio value over time
+        let usdcBalance = 3000; // Initial deposit
+        let btcBalance = 0;
+        const portfolioValues = [];
+        
+        // Add initial point
+        portfolioValues.push({
+            time: 'Start',
+            value: 3000,
+            timestamp: sortedTrades[0] ? parseInt(sortedTrades[0].id) - 3600000 : Date.now()
+        });
+        
+        // Process each trade chronologically
+        sortedTrades.forEach((trade: any) => {
+            const usdcAmount = trade.usdcAmount;
+            const btcAmount = trade.btcAmount;
+            const action = trade.action;
+            const entryPrice = trade.price;
+            
+            if (action === 'BUY') {
+                // Buy BTC with USDC at entry price
+                usdcBalance -= usdcAmount;
+                btcBalance += btcAmount;
+            } else if (action === 'SELL') {
+                // Sell BTC for USDC at entry price  
+                usdcBalance += usdcAmount;
+                btcBalance -= btcAmount;
+            }
+            
+            // Calculate total portfolio value at this point
+            const priceVariation = 1 + (Math.random() - 0.5) * 0.02; // ±1% random variation
+            const adjustedBtcPrice = entryPrice * priceVariation;
+            const totalValue = usdcBalance + (btcBalance * adjustedBtcPrice);
+            
+            portfolioValues.push({
+                time: formatTradeTime(trade.id),
+                value: Math.round(totalValue),
+                timestamp: parseInt(trade.id)
+            });
+        });
+        
+        return portfolioValues;
+    };
 
-    //     const interval = setInterval(async () => {
-    //         try {
-    //             const newTrade = await DataAdapter.generateNewTrade();
-    //             setLiveFeed(prev => [newTrade, ...prev.slice(0, 4)]);
-    //         } catch (error) {
-    //             console.error('Failed to generate new trade:', error);
-    //         }
-    //     }, 3000);
-
-    //     return () => clearInterval(interval);
-    // }, [loading]);
-
+    // Handle AI model card click
+    const handleModelClick = (model: any) => {
+        if (selectedModelForChart?.name === model.name) {
+            // If clicking the same model, deselect it
+            setSelectedModelForChart(null);
+            setSingleModelChartData([]);
+        } else {
+            // Select new model and generate its chart data
+            setSelectedModelForChart(model);
+            const modelChartData = generateSingleModelChartData(model, liveFeed, btcPrice);
+            setSingleModelChartData(modelChartData);
+        }
+    };
+ 
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-white">
             {/* Animated gradient background */}
@@ -312,34 +378,60 @@ const HomeContainer = () => {
                 >
                     <h2 className="text-3xl font-bold mb-1">
                         <span className="bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#00ff88] bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
-                            AI Models Compete • Real Capital • Live on Sui
+                            AI Models Compete • Real Capital • Verified by Walrus
                         </span>
                     </h2>
                 </motion.div>
+
+                {/* Deposit Button */}
+                <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.2 }}
+                    className="flex justify-center mt-4"
+                >
+                    <Link
+                        href="/season"
+                        className="px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
+                    >
+                        Join Season 2 →
+                    </Link>
+                </motion.div>
+
             </div>
 
             {/* Main Content - Chart and Feed */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 pb-8">
 
-               
-{/* AI Model Cards - Using HomeAIModelCard Component */}
+
+                {/* AI Model Cards - Using HomeAIModelCard Component */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                     {aiModels.map((model, index) => (
-                        <HomeAIModelCard
+                        <div 
                             key={model.name}
-                            model={{
-                                name: model.displayName,
-                                tvl: model.tvl || 0,
-                                pnl: model.pnl || 0,
-                                trades: model.trades || 0,
-                                color: model.color,
-                                rank: model.rank
-                            }}
-                        />
+                            onClick={() => handleModelClick(model)}
+                            className={`cursor-pointer transition-all rounded-xl ${
+                                selectedModelForChart?.name === model.name 
+                                    ? 'ring-2 ring-offset-2 ring-offset-black' 
+                                    : 'hover:scale-105'
+                            }`}
+                            style={selectedModelForChart?.name === model.name ? { borderColor: model.color, boxShadow: `0 0 0 2px ${model.color}` } : {}}
+                        >
+                            <HomeAIModelCard
+                                model={{
+                                    name: model.displayName,
+                                    tvl: model.tvl || 0,
+                                    pnl: model.pnl || 0,
+                                    trades: model.trades || 0,
+                                    color: model.color,
+                                    rank: model.rank
+                                }}
+                            />
+                        </div>
                     ))}
                 </div>
 
-
+ 
                 {/* Chart and Live Feed Row - Maximum Height */}
                 <div className="grid grid-cols-3 gap-6">
                     {/* Performance Chart - Takes 2 columns */}
@@ -351,8 +443,18 @@ const HomeContainer = () => {
                     >
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h3 className="text-lg font-bold mb-0.5">Performance Chart</h3>
-                                <p className="text-xs text-gray-400">Season#1: PnL percentage</p>
+                                <h3 className="text-lg font-bold mb-0.5">
+                                    {selectedModelForChart 
+                                        ? `${selectedModelForChart.displayName}` 
+                                        : 'Click an AI model to view'
+                                    }
+                                </h3>
+                                <p className="text-xs text-gray-400">
+                                    {selectedModelForChart 
+                                        ? `Portfolio Value Over Time` 
+                                        : 'Click an AI model to view performance'
+                                    }
+                                </p>
                             </div>
                             <div className="flex items-center space-x-2">
                                 <div className="w-2 h-2 bg-[#00ff88] rounded-full animate-pulse" />
@@ -360,18 +462,18 @@ const HomeContainer = () => {
                             </div>
                         </div>
                         <ResponsiveContainer width="100%" height={550}>
-                            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                            <LineChart data={selectedModelForChart ? singleModelChartData : chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" />
-                                <XAxis 
-                                    dataKey="time" 
-                                    stroke="#666" 
+                                <XAxis
+                                    dataKey="time"
+                                    stroke="#666"
                                     style={{ fontSize: '11px' }}
                                 />
-                                <YAxis 
-                                    stroke="#666" 
+                                <YAxis
+                                    stroke="#666"
                                     style={{ fontSize: '11px' }}
-                                    tickFormatter={(value) => `${value.toFixed(1)}%`}
-                                    domain={['dataMin - 5', 'dataMax + 5']}
+                                    tickFormatter={(value) => selectedModelForChart ? `$${value.toLocaleString()}` : `${value.toFixed(1)}%`}
+                                    domain={selectedModelForChart ? ['auto', 'auto'] : ['dataMin - 5', 'dataMax + 5']}
                                     allowDataOverflow={false}
                                 />
                                 <Tooltip
@@ -380,34 +482,53 @@ const HomeContainer = () => {
                                         border: '1px solid #333',
                                         borderRadius: '8px',
                                     }}
-                                    formatter={(value: number, name: string) => [`${value.toFixed(2)}%`, name]}
+                                    formatter={(value: number, name: string) => [
+                                        selectedModelForChart 
+                                            ? `$${value.toLocaleString()}` 
+                                            : `${value.toFixed(2)}%`, 
+                                        selectedModelForChart ? 'Portfolio Value' : name
+                                    ]}
                                 />
                                 <Legend />
-                                <ReferenceLine y={0} stroke="#666" strokeWidth={1} strokeDasharray="3 3" />
-                                <Line 
-                                    type="monotone" 
-                                    dataKey="AmazonNovaPro" 
-                                    stroke="#00ff88" 
-                                    strokeWidth={2} 
-                                    dot={false}
-                                    name="Amazon Nova Pro"
-                                />
-                                <Line 
-                                    type="monotone" 
-                                    dataKey="ClaudeSonnet" 
-                                    stroke="#00d4ff" 
-                                    strokeWidth={2} 
-                                    dot={false}
-                                    name="Claude Sonnet"
-                                />
-                                <Line 
-                                    type="monotone" 
-                                    dataKey="LlamaMaverick" 
-                                    stroke="#ff00ff" 
-                                    strokeWidth={2} 
-                                    dot={false}
-                                    name="Llama Maverick"
-                                />
+                                {selectedModelForChart ? (
+                                    <Line
+                                        type="monotone"
+                                        dataKey="value"
+                                        stroke={selectedModelForChart.color}
+                                        strokeWidth={3}
+                                        dot={{ fill: selectedModelForChart.color, strokeWidth: 2, r: 4 }}
+                                        activeDot={{ r: 6 }}
+                                        name={selectedModelForChart.displayName}
+                                    />
+                                ) : (
+                                    <>
+                                        <ReferenceLine y={0} stroke="#666" strokeWidth={1} strokeDasharray="3 3" />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="AmazonNovaPro"
+                                            stroke="#00ff88"
+                                            strokeWidth={2}
+                                            dot={false}
+                                            name="Amazon Nova Pro"
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="ClaudeSonnet"
+                                            stroke="#00d4ff"
+                                            strokeWidth={2}
+                                            dot={false}
+                                            name="Claude Sonnet 4.5"
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="LlamaMaverick"
+                                            stroke="#ff00ff"
+                                            strokeWidth={2}
+                                            dot={false}
+                                            name="Llama 4 Maverick"
+                                        />
+                                    </>
+                                )}
                             </LineChart>
                         </ResponsiveContainer>
                     </motion.div>
@@ -426,8 +547,8 @@ const HomeContainer = () => {
                             </div>
                             <Zap className="w-5 h-5 text-[#00ff88]" />
                         </div>
-                        <HomeTradeFeed 
-                            trades={liveFeed} 
+                        <HomeTradeFeed
+                            trades={liveFeed}
                             onTradeClick={(trade: any) => {
                                 setSelectedTrade(trade);
                                 setIsModalOpen(true);
@@ -435,37 +556,7 @@ const HomeContainer = () => {
                         />
                     </motion.div>
                 </div>
-
-                 {/* Compact Stats Bar */}
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="my-6 bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4"
-                >
-                    <div className="grid grid-cols-4 gap-4 text-center">
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Season</p>
-                            <p className="text-xl font-bold text-[#ff00ff]">1</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Active Trades</p>
-                            <p className="text-xl font-bold text-[#00d4ff]">24</p>
-                        </div>
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Total Capital</p>
-                            <p className="text-xl font-bold text-[#00ff88]">$60,000</p>
-                        </div>
-
-                        <div>
-                            <p className="text-xs text-gray-400 mb-1">Time Left</p>
-                            <p className="text-xl font-bold text-white">5d 14h</p>
-                        </div>
-                    </div>
-                </motion.div>
-
- 
-
+  
                 {/* About Section - Merged from About Page */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -486,19 +577,6 @@ const HomeContainer = () => {
                     </p>
                 </motion.div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                    className="mt-6 flex flex-col items-center space-y-4"
-                >
-                    <Link
-                        href="/season"
-                        className="px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
-                    >
-                        View All Seasons →
-                    </Link>
-                </motion.div>
 
                 {/* Features Grid */}
                 <div className="grid grid-cols-4 gap-6 mb-12">
@@ -657,20 +735,6 @@ const HomeContainer = () => {
                     </div>
                 </motion.div>
 
-                {/* Team Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.9 }}
-                    className="text-center"
-                >
-                    <div className="inline-flex items-center space-x-2 px-4 py-2 bg-black/40 border border-gray-800 rounded-full">
-                        <Users className="w-4 h-4 text-[#00ff88]" />
-                        <span className="text-sm text-gray-400">
-                            Built for <span className="text-white font-semibold">Walrus Hackathon</span> • AI x DATA Track
-                        </span>
-                    </div>
-                </motion.div>
             </div>
 
 

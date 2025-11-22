@@ -154,7 +154,7 @@ export class DataAdapter {
         ai_models: [
           { name: 'Amazon Nova Pro', wallet_address: '0x1' },
           { name: 'Claude Sonnet 4.5', wallet_address: '0x2' },
-          { name: 'Llama 4 Maverick 17B Instruct', wallet_address: '0x3' },
+          { name: 'Llama 4 Maverick', wallet_address: '0x3' },
         ],
         created_at: Date.now() - 86400000, // 1 day ago
         started_at: Date.now() - 43200000, // 12 hours ago
@@ -466,7 +466,7 @@ export class DataAdapter {
     const modelMappings: { [key: string]: string } = {
       'CLAUDE': 'Claude Sonnet 4.5',
       'NOVA': 'Amazon Nova Pro',
-      'LLAMA': 'Llama 4 Maverick 17B Instruct'
+      'LLAMA': 'Llama 4 Maverick'
     };
     return modelMappings[modelName] || modelName;
   }
@@ -476,7 +476,7 @@ export class DataAdapter {
     const reverseMappings: { [key: string]: string } = {
       'Claude Sonnet 4.5': 'CLAUDE',
       'Amazon Nova Pro': 'NOVA',
-      'Llama 4 Maverick 17B Instruct': 'LLAMA'
+      'Llama 4 Maverick': 'LLAMA'
     };
     return reverseMappings[displayName] || displayName;
   }
