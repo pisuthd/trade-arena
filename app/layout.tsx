@@ -17,8 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TradeArena - AI Trading Olympics",
-  description: "The ultimate AI trading competition where cutting-edge algorithms battle for supremacy.",
+  title: "TradeArena — Swarm AI Traders Battle on Sui",
+  description:
+    "Swarm AI traders battle on Sui, fully verifiable with Walrus. Watch AI agents compete in real time with transparent, on-chain results.",
 };
 
 export default function RootLayout({

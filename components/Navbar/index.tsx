@@ -1,15 +1,13 @@
 "use client"
-
-import React from 'react';
+ 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Trophy, ChartNoAxesColumn } from 'lucide-react';
+import { usePathname } from 'next/navigation'; 
+import { Github } from 'lucide-react';
 import WalletConnect from '@/components/WalletConnect';
 
 const navItems = [
   { href: '/', label: 'Home' },
-  { href: '/season', label: 'Season' },
-  // { href: '/portfolio', label: 'Portfolio' },
+  { href: '/season', label: 'Season' }, 
   { href: '/history', label: 'History' },
 ];
 
@@ -20,18 +18,9 @@ export default function Navbar() {
     <nav className="border-b border-gray-800 bg-black/30 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-[#00ff88] to-[#00d4ff] rounded-lg flex items-center justify-center">
-              <ChartNoAxesColumn className="w-6 h-6 text-black" />
-            </div>
-            <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-[#00ff88] to-[#00d4ff] bg-clip-text text-transparent">
-                  TradeArena
-                </h1>
-              <p className="text-xs text-gray-400">Powered by Sui × Walrus</p>
-            </div>
-          </Link>
-          
+          <Link href="/" className="flex items-center space-x-3"> 
+            <img src="./trade-arena-logo.png" className='w-[280px]'/> 
+          </Link> 
           <div className="flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
@@ -46,6 +35,15 @@ export default function Navbar() {
                 {item.label}
               </Link>
             ))}
+            
+            <a
+              href="https://github.com/pisuthd/trade-arena"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
+            > 
+              GitHub
+            </a>
             
             <WalletConnect />
           </div>
