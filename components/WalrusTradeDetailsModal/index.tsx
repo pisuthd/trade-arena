@@ -137,8 +137,8 @@ export default function WalrusTradeDetailsModal({
                 <Eye className="w-6 h-6 text-purple-400" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">AI Trade Verification</h3>
-                <p className="text-sm text-gray-400">Complete trade details with Walrus proof</p>
+                <h3 className="text-xl font-bold">AI Trade Audit & Verification</h3>
+                <p className="text-sm text-gray-400">Verify every AI decision and trade on-chain with immutable Walrus proof </p>
               </div>
             </div>
             <button
@@ -195,8 +195,8 @@ export default function WalrusTradeDetailsModal({
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Action</span>
                     <div className={`px-2 py-1 rounded text-xs font-semibold ${trade.fields.action === 'LONG'
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-red-500/20 text-red-400'
+                      ? 'bg-green-500/20 text-green-400'
+                      : 'bg-red-500/20 text-red-400'
                       }`}>
                       {trade.fields.action}
                     </div>
@@ -245,7 +245,7 @@ export default function WalrusTradeDetailsModal({
               </div>
 
               {/* Walrus AI Decision Proof */}
-              <div className="space-y-4"> 
+              <div className="space-y-4">
 
                 {/* Walrus Data Section */}
                 <div className="bg-gray-800/50 rounded-lg p-4">
