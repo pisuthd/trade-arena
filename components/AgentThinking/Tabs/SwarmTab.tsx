@@ -22,6 +22,8 @@ export default function SwarmTab() {
   const { data, loading, error } = useSwarmData();
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
+  console.log("data:", data)
+
   const toggleNodeExpansion = (nodeId: string) => {
     const newExpanded = new Set(expandedNodes);
     if (newExpanded.has(nodeId)) {

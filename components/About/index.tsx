@@ -63,13 +63,11 @@ const AboutContainer = () => {
                 />
             </div>
 
-            {/* Divider */}
             <div className="relative z-10 mt-[60px] mb-[40px]">
                 <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
             </div>
 
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-12">
-                {/* Clean, Focused Title */}
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -268,6 +266,10 @@ const AboutContainer = () => {
                     </div>*/}
                 </motion.div>
 
+                <div className="relative z-10 mt-[60px] mb-[100px]">
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
+                </div>
+
                 {/* User Journey Timeline */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -297,9 +299,9 @@ const AboutContainer = () => {
                                 <div className="w-1/2 pr-8 text-right">
                                     <div className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6 inline-block text-left">
                                         <h3 className="text-xl font-bold mb-2 text-[#00ff88]">Pre-season</h3>
-                                        <p className="text-gray-400 mb-3">TradeArena runs in seasons before trading begins</p>
+                                        <p className="text-gray-400 mb-3">TradeArena runs in seasons with an AI-managed vault</p>
                                         <div className="text-sm text-white">
-                                            <div className="font-semibold mb-1">You can:</div>
+                                            <div className="font-semibold mb-1">Before the season begins:</div>
                                             <ul className="space-y-1 text-gray-300">
                                                 <li>• Deposit USDC to favorite AI models</li>
                                                 <li>• Receive share tokens for vault ownership</li>
@@ -324,7 +326,7 @@ const AboutContainer = () => {
                                 <div className="w-1/2 pl-8">
                                     <div className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6">
                                         <h3 className="text-xl font-bold mb-2 text-[#00d4ff]">Season Started</h3>
-                                        <p className="text-gray-400 mb-3">All AI agents are now active</p>
+                                        <p className="text-gray-400 mb-3">All AI agents are now live and trading</p>
                                         <div className="text-sm text-white">
                                             <div className="font-semibold mb-1">Now active:</div>
                                             <ul className="space-y-1 text-gray-300">
@@ -349,7 +351,7 @@ const AboutContainer = () => {
                                         <h3 className="text-xl font-bold mb-2 text-[#ff6b00]">Analyze Market</h3>
                                         <p className="text-gray-400 mb-3">Swarm research in progress</p>
                                         <div className="text-sm text-white">
-                                            <div className="font-semibold mb-1">Strands Agents coordinate:</div>
+                                            <div className="font-semibold mb-1">Multiple agents working together:</div>
                                             <ul className="space-y-1 text-gray-300">
                                                 <li>• Price researcher: BTC market data via CoinMarketCap API</li>
                                                 <li>• News researcher: Real-time news analysis via web search</li>
@@ -376,7 +378,7 @@ const AboutContainer = () => {
                                         <h3 className="text-xl font-bold mb-2 text-[#ff00ff]">Execution</h3>
                                         <p className="text-gray-400 mb-3">AI models execute trades independently</p>
                                         <div className="text-sm text-white">
-                                            <div className="font-semibold mb-1">Via MCP Protocol:</div>
+                                            <div className="font-semibold mb-1">On-Chain via MCP:</div>
                                             <ul className="space-y-1 text-gray-300">
                                                 <li>• Each AI receives market summary from swarm</li>
                                                 <li>• Stores reasoning on Walrus for transparency</li>
@@ -414,10 +416,12 @@ const AboutContainer = () => {
                         </div>
                     </div>
                 </motion.div>
+ 
+                <div className="relative z-10 mt-[100px] mb-[80px]">
+                    <div className="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent" />
+                </div>
 
-
-
-                {/* Key Features - Simplified */}
+                {/* Key Features */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -446,8 +450,8 @@ const AboutContainer = () => {
                             },
                             {
                                 icon: Zap,
-                                title: 'Lightning Fast',
-                                description: 'Trades execute instantly on Sui blockchain. Fast finality and low costs mean more efficient trading.',
+                                title: 'Autonomous Execution',
+                                description: 'AI agents place and manage trades autonomously via MCP accessing multiple protocols on Sui at once.',
                                 color: '#ff00ff',
                             },
                             {
@@ -517,7 +521,7 @@ const AboutContainer = () => {
                 >
                     <h2 className="text-3xl font-bold mb-4">Join the Competition</h2>
                     <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-                        Experience AI trading powered by Strands Agents. Deposit to your favorite model and watch them compete.
+                        Back your favorite AI models in seasonal trading competitions. Deposit USDC, receive share tokens, and let autonomous agents trade on your behalf.
                     </p>
                     <div className="flex items-center justify-center space-x-4">
                         <Link
@@ -527,13 +531,13 @@ const AboutContainer = () => {
                             Start Trading
                         </Link>
                         <a
-                            href="https://github.com/strands/strands-agents"
+                            href="https://github.com/pisuthd/trade-arena"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="px-6 py-3 bg-black/60 border border-gray-700 text-white font-semibold rounded-lg hover:border-gray-600 transition-all flex items-center gap-2"
                         >
                             <ExternalLink className="w-4 h-4" />
-                            Strands Agents
+                            GitHub
                         </a>
                     </div>
                 </motion.div>

@@ -95,27 +95,7 @@ export default function AgentTab({ agentType }: AgentTabProps) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Agent Header - Simplified */}
-      {/* <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-4"
-      >
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-            <img 
-              src={config.image} 
-              alt={config.name}
-              className="w-10 h-10 object-cover"
-            />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold">{config.name}</h2>
-            <p className="text-gray-400 text-xs">{config.description}</p>
-          </div>
-        </div>
-      </motion.div> */}
+    <div className="space-y-6"> 
 
       {/* Simple Search Only */}
       <motion.div

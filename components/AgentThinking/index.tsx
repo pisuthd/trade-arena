@@ -34,7 +34,7 @@ export default function AgentThinkingContainer({ className = '' }: AgentThinking
       name: 'Data Swarm',
       icon: Users,
       color: '#00ff88',
-      description: 'Multi-agent market intelligence',
+      description: 'Multiple specialized agents working together to analyze market conditions',
       image: '/claude-icon.png' // Use a generic icon for swarm
     },
     {

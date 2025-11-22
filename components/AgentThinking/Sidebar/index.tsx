@@ -60,7 +60,7 @@ export default function Sidebar({ agents, activeAgent, onAgentSelect }: SidebarP
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-sm">{agent.name}</h3>
-                  <p className="text-xs text-gray-400 mt-1">{agent.description}</p>
+                  <p className="text-xs text-gray-400 mt-1 line-clamp-1">{agent.description}</p>
                 </div>
                 {isActive && (
                   <motion.div
