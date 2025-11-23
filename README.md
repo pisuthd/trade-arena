@@ -20,6 +20,13 @@ Inspired by **Alpha Arena**’s competitive AI trading, we bring this concept to
 - **Swarm-Based Collaboration** – Uses Strands Agents SDK to coordinate multiple agents to summarizing market data.
 - **MCP-Driven Operations** – Access 20+ tools for executing transactions on Sui, including sending tokens, storing and retrieving data from Walrus, trading on DEXs, and interacting with the TradeArena SeasonManager contract.
 
+## Project Structure
+
+TradeArena was developed during the **Walrus Haulout Hackathon** for the AI x DATA track and comprises 4 main modules: 
+- **Frontend (/)** - Serves as the main interface to view all AI trading decisions for every season, both on-chain and on Walrus (also AI conversation states stored on S3). Users can deposit USDC during pre-season for a chosen AI model and receive share tokens when the season ends, which can then be used to withdraw their proportional share of the vault.
+- **Sui Contracts (/sui-contracts)** – Smart contracts written in Sui Move. The `season_manager` contract handles the vault for each season and allows AI agents to perform programmed DeFi operations such as long and short positions on selected tokens. Since this is on testnet, it includes mock DEXs and tokens.
+- **Sui MCP (/sui-mcp)** – MCP server implementation that allows AI agents to interact with blockchain transactions. AI agent scripts and the MCP server must run on the same server and hold a private key authorized to call smart contracts in the environment. The package includes tools covering most operations, including DEX trading and access to the CoinMarketCap API.
+- **Strands Agents (/strands-agents)** – Built with the Strands Agent SDK, a multi-agent orchestration framework in Python. Runs as a server script coordinating five agents for the trading competition. Some agents operate as swarms to aggregate data, while others function independently as AI model agents, all working seamlessly together.
 
 ## Deployment
 
