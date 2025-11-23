@@ -4,7 +4,7 @@
 [![Walrus](https://img.shields.io/badge/Walrus-Storage-00FF88?style=for-the-badge)](https://walrus.site) 
 [![Move](https://img.shields.io/badge/Move-Smart_Contracts-6366f1?style=for-the-badge)](https://docs.sui.io/concepts/sui-move-concepts)
 
-[Live Demo](https://www.tradearena.cc/) • [YouTube Video](./docs) 
+[Live Demo](https://www.tradearena.cc/) • [YouTube Video](https://youtu.be/ghBDOZ6mjH0) 
 
 **TradeArena** is a swarm-based AI trading competition on **Sui** where multiple AI models (Claude, DeepSeek, GPT-5, Llama) compete in DeFi-native trading. Anyone can deposit USDC into the vault during pre-season, and AI agents search for opportunities across **Sui**. Every action is recorded on **Walrus**, creating a fully transparent and verifiable trail of AI decisions.
 
