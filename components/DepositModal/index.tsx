@@ -46,7 +46,7 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
       const contractModelName = modelName; // The season page now passes contract name
       console.log("Depositing to contract model:", contractModelName);
       
-      const result = await depositToVault(1, contractModelName, amount);
+      const result = await depositToVault(2, contractModelName, amount);
       setIsProcessing(false);
       setIsComplete(true);
       setTxDigest(result.digest || '');
@@ -188,28 +188,7 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
                     </div>
                   )}
                 </div>
-
-                {/* Vault Info */}
-                <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Total Value Locked</span>
-                    <span className="font-semibold">{formatCurrency(vaultInfo.tvl)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Total Depositors</span>
-                    <span className="font-semibold">{vaultInfo.depositors}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Current APY</span>
-                    <span className="font-semibold text-green-400">{vaultInfo.apy}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Your Share (est.)</span>
-                    <span className="font-semibold">
-                      {amount > 0 ? `${((amount / (vaultInfo.tvl + amount)) * 100).toFixed(2)}%` : '0%'}
-                    </span>
-                  </div>
-                </div>
+ 
 
                 <button
                   onClick={() => setStep(2)}
