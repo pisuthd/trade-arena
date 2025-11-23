@@ -28,6 +28,17 @@ TradeArena was developed during the **Walrus Haulout Hackathon** for the AI x DA
 - **Sui MCP (/sui-mcp)** – MCP server implementation that allows AI agents to interact with blockchain transactions. AI agent scripts and the MCP server must run on the same server and hold a private key authorized to call smart contracts in the environment. The package includes tools covering most operations, including DEX trading and access to the CoinMarketCap API.
 - **Strands Agents (/strands-agents)** – Built with the Strands Agent SDK, a multi-agent orchestration framework in Python. Runs as a server script coordinating five agents for the trading competition. Some agents operate as swarms to aggregate data, while others function independently as AI model agents, all working seamlessly together.
 
+## Architecture 
+
+TradeArena is built on a **swarm-based architecture** that orchestrates multiple specialized agents, each focusing on different aspects of trading such as technical analysis, market sentiment, and competitive awareness. These agents collaborate as a swarm to generate comprehensive market intelligence, which individual AI models then use to make independent trading decisions.
+
+<img width="1037" height="420" alt="trade-arena drawio" src="https://github.com/user-attachments/assets/05a5f65d-eab6-4837-b44d-72cc12615d3e" />
+
+
+The system leverages the **Strands Agents SDK** to coordinate the swarm and manage state across agents, collecting and synthesizing market data from multiple sources simultaneously. The **MCP server** acts as the bridge between AI and on-chain execution, handling secure transaction signing and other blockchain operations. All AI reasoning and market analysis are recorded on **Walrus**, creating an immutable, verifiable audit trail for every decision.
+
+The smart contract built in **Sui Move**, implements the core competition logic and trading operations. The **Season Manager** contract manages AI vaults, user deposits, and trading authorization for each season.
+
 ## Sui Contracts
 
 Sui smart contracts handling the entire competition and trading operations. For testnet deployment, we include a Uniswap-style DEX and mock tokens to simulate real DeFi assets. The contracts are written in Sui Move and integrate tightly with AI agents and Walrus for transparent tracking.
@@ -115,6 +126,153 @@ tradeArenaWalrusStoreTool: {
 ```
 
 The MCP server ensures **secure and isolated AI operations**. Each AI model has a dedicated wallet authorization, and all transactions are validated against vault balances. Private keys are securely managed by the server, and every action is logged with references to Walrus blobs, creating a fully auditable trail.
+
+
+## Strands Agents
+
+The system uses the Strands Agents SDK to coordinate AI trading through a sophisticated two-phase approach:
+
+### Phase 1: Swarm-Based Market Research
+
+A collaborative swarm of specialized agents gathers and analyzes market data:
+
+**Price Research Agent:**
+```python
+price_agent = Agent(
+    name="price_researcher",
+    system_prompt=(
+        "You are a Bitcoin price research specialist. Your job is to analyze BTC market data "
+        "and deliver concise, actionable insights.\n\n"
+        "Do the following:\n"
+        "1. Use get_major_crypto_prices to retrieve BTC price, market cap, volume, and 24h changes.\n"
+        "2. Analyze key metrics: momentum, volatility, volume trends, and support/resistance levels.\n"
+        "3. Provide a short summary of current market conditions and key price levels to watch."
+    ),
+    tools=[sui_tools]
+)
+```
+
+**News Research Agent:**
+```python
+news_agent = Agent(
+    name="news_researcher", 
+    system_prompt=(
+        "You are a Bitcoin news researcher. Find and summarize news from the last 24–48 hours "
+        "that may impact BTC price.\n\n"
+        "1. Search for recent BTC-related news using http_request\n"
+        "2. Classify each item as bullish, bearish, or neutral\n"
+        "3. Provide a concise summary of overall news impact"
+    ),
+    tools=[http_request]
+)
+```
+
+**Swarm Coordination:**
+```python
+swarm = Swarm(
+    [price_agent, news_agent],
+    entry_point=price_agent,
+    max_handoffs=10,
+    max_iterations=15,
+    execution_timeout=600.0,
+    session_manager=session_manager
+)
+
+research_task = (
+    "Conduct a Bitcoin market research cycle. Your output must include:\n"
+    "1. BTC price analysis (momentum, volatility, volume, key levels)\n"
+    "2. News impact summary from the last 24–48 hours\n"
+    "3. Combined interpretation of market structure + news\n"
+    "4. Important levels to watch (supports, resistances, volatility zones)"
+)
+```
+
+### Phase 2: Independent AI Model Execution
+
+After swarm research completes, individual AI models analyze the results and make independent trading decisions:
+
+**Claude Trading Agent:**
+```python
+claude_agent = Agent(
+    name="claude_trading_agent",
+    agent_id="claude_trading_agent", 
+    tools=[sui_tools],
+    model=BedrockModel(
+        model_id="us.anthropic.claude-sonnet-4-5-20250929-v1:0",
+        boto_session=boto_session
+    ),
+    session_manager=session_manager
+)
+```
+
+**Trading Prompt for Each AI:**
+```python
+trading_prompt = f"""
+You are an AI trading agent competing in Season 1 of a 3-agent BTC trading league.
+
+YOUR TASK:
+1. Analyze your competitive position and market conditions
+2. Determine the optimal trading strategy (LONG/SHORT) - you MUST take a position
+3. Decide position size based on risk management and your competitive situation
+4. Execute the trade using the available MCP tools:
+   - trade_arena_walrus_store: Store your trade reasoning and data
+   - trade_arena_ai_execute_long: Execute LONG positions
+   - trade_arena_ai_execute_short: Execute SHORT positions
+
+EXECUTION REQUIREMENTS:
+- Always store your trade data on Walrus first with detailed reasoning
+- Then execute the trade using the appropriate execution tool
+- Include your AI model name, confidence level, and strategic reasoning
+- YOU MUST EXECUTE A TRADE - no holding positions allowed
+"""
+```
+
+## How to Test
+
+### Prerequisites
+
+```bash
+# Node.js & npm
+node >= 20.0.0
+npm >= 9.0.0
+```
+
+### Smart Contract Testing
+
+```bash
+cd sui-contracts
+
+# Run all tests
+sui move test
+
+```
+
+### MCP Server Testing
+
+```bash
+cd sui-mcp
+
+# Install dependencies
+npm install
+
+# Build the project
+npm run build
+
+# Run MCP server to test with local MCP client
+node /dist/index.js
+```
+
+### Strands Agents Testing
+
+```bash
+cd strands-agents
+
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Run trading cycle 
+python main.py
+```
 
 ## Deployment
 
