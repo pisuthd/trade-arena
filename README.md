@@ -28,6 +28,94 @@ TradeArena was developed during the **Walrus Haulout Hackathon** for the AI x DA
 - **Sui MCP (/sui-mcp)** – MCP server implementation that allows AI agents to interact with blockchain transactions. AI agent scripts and the MCP server must run on the same server and hold a private key authorized to call smart contracts in the environment. The package includes tools covering most operations, including DEX trading and access to the CoinMarketCap API.
 - **Strands Agents (/strands-agents)** – Built with the Strands Agent SDK, a multi-agent orchestration framework in Python. Runs as a server script coordinating five agents for the trading competition. Some agents operate as swarms to aggregate data, while others function independently as AI model agents, all working seamlessly together.
 
+## Sui Contracts
+
+Sui smart contracts handling the entire competition and trading operations. For testnet deployment, we include a Uniswap-style DEX and mock tokens to simulate real DeFi assets. The contracts are written in Sui Move and integrate tightly with AI agents and Walrus for transparent tracking.
+
+### Season Manager 
+
+`season_manager.move` helps managing the full lifecycle of each competition season. It handles pre-season deposits, active trading by AI agents, and post-season settlement. Each season supports multiple AI models with dedicated vaults holding USDC and BTC tokens. Users receive LP tokens representing proportional ownership of the vault, and only authorized AI wallets can execute trades. All AI decisions and trades are logged in Walrus.
+
+
+**Core Functions:**
+```move
+
+// AI executes LONG position (USDC → BTC)
+public entry fun ai_execute_long(
+    global: &mut SeasonGlobal,
+    season_number: u64,
+    ai_name: String,
+    dex_global: &mut DEXGlobal,
+    usdc_amount: u64,
+    reasoning: String,
+    confidence: u64,
+    walrus_blob_id: vector<u8>
+)
+
+// User deposits to AI vault (pre-season)
+public entry fun deposit_to_vault(
+    global: &mut SeasonGlobal,
+    season_number: u64,
+    ai_name: String,
+    usdc: Coin<MOCK_USDC>
+)
+```
+
+## Sui MCP
+
+The MCP (Model Context Protocol) server provides **AI agents with secure, autonomous access** to Sui on-chain operations. It acts as the bridge between AI decision-making and on-chain execution, allowing agents to perform DeFi operations, manage wallets, interact with DEXs, and record reasoning on Walrus.
+
+The MCP server (sui-mcp/) implements 20+ tools organized into functional categories. These tools cover the full range of operations needed for AI-driven trading, from wallet management to market data retrieval and transaction execution.
+
+Key functional categories include:
+
+- **Basic Operations** – Manage wallets, transfer tokens, and query balances.
+- **Trading Tools** – Interact with DEXs, manage positions, and query prices.
+- **Walrus Storage** – Store and retrieve AI trade data and reasoning.
+- **Price APIs** – Access market data via CoinMarketCap.
+- **Transaction Management** – Sign, submit, and monitor blockchain transactions.
+
+
+### Key Tools
+
+**Trading Operations:**
+```typescript
+// Execute LONG position
+tradeArenaAiExecuteLongTool: {
+    name: "trade_arena_ai_execute_long",
+    description: "Execute LONG position (USDC → BTC) for AI trading",
+    parameters: {
+        season_number: "number",
+        ai_name: "string", 
+        usdc_amount: "number",
+        reasoning: "string",
+        confidence: "number",
+        walrus_blob_id: "string"
+    }
+}
+
+// Execute SHORT position  
+tradeArenaAiExecuteShortTool: {
+    name: "trade_arena_ai_execute_short", 
+    description: "Execute SHORT position (BTC → USDC) for AI trading"
+}
+```
+
+**Walrus Integration:**
+```typescript
+// Store trade data on Walrus
+tradeArenaWalrusStoreTool: {
+    name: "trade_arena_walrus_store",
+    description: "Store AI trade data and reasoning on Walrus",
+    parameters: {
+        data: "object", // Contains AI decision, market data, reasoning
+        epochs: "number" // Storage duration
+    }
+}
+```
+
+The MCP server ensures **secure and isolated AI operations**. Each AI model has a dedicated wallet authorization, and all transactions are validated against vault balances. Private keys are securely managed by the server, and every action is logged with references to Walrus blobs, creating a fully auditable trail.
+
 ## Deployment
 
 ### Sui Testnet
