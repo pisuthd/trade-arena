@@ -7,6 +7,10 @@ import { LoadingSpinner } from '@/components/UI';
 import { SeasonCard } from '@/components/Season';
 import DepositModal from '@/components/DepositModal';
 import WithdrawModal from '@/components/WithdrawModal';
+import { useWalletBalance } from '@/hooks/useWalletBalance';
+import { usePrice } from '@/hooks/usePrice';
+import { RefreshCw, Droplets } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function SeasonPage() {
 
@@ -27,6 +31,10 @@ export default function SeasonPage() {
   const seasonInfo = seasonData?.data?.content as any;
   const seasonStatus = seasonInfo?.fields?.status || 0;
   const statusInfo = getSeasonStatusText(seasonStatus);
+
+  // Wallet balance hook
+  const walletBalance = useWalletBalance();
+  const { formatUSD } = usePrice();
 
   // Fetch seasons data and BTC price on component mount
   useEffect(() => {
@@ -258,6 +266,114 @@ export default function SeasonPage() {
             />
           ))}
         </div>
+
+        {/* Wallet Balances */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-8 bg-black/40 backdrop-blur-sm border border-gray-800 rounded-xl p-6"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold">Wallet Balances</h3>
+            <div className="flex items-center space-x-4">
+              {walletBalance.lastUpdated && (
+                <span className="text-sm text-gray-400">
+                  Updated {new Date(walletBalance.lastUpdated).toLocaleTimeString()}
+                </span>
+              )}
+              <button
+                onClick={walletBalance.fetchBalances}
+                disabled={walletBalance.loading}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${walletBalance.loading ? 'animate-spin' : ''}`} />
+                <span className="text-sm">Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          {walletBalance.error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
+              <p className="text-red-400 text-sm">{walletBalance.error}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* SUI Balance */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">{walletBalance.getTokenBalanceInfo('SUI').emoji}</span>
+                  <span className="font-medium">SUI</span>
+                </div>
+                <span className="text-sm text-gray-400">Native</span>
+              </div>
+              <p className="text-xl font-semibold mb-1">
+                {walletBalance.getTokenBalanceInfo('SUI').formattedAmount} SUI
+              </p>
+              <p className="text-sm text-gray-400">
+                {walletBalance.getTokenBalanceInfo('SUI').formattedUSD}
+              </p>
+            </div>
+
+            {/* USDC Balance */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">{walletBalance.getTokenBalanceInfo('USDC').emoji}</span>
+                  <span className="font-medium">USDC</span>
+                </div>
+                <span className="text-sm text-gray-400">Stablecoin</span>
+              </div>
+              <p className="text-xl font-semibold mb-1">
+                {walletBalance.getTokenBalanceInfo('USDC').formattedAmount} USDC
+              </p>
+              <p className="text-sm text-gray-400 mb-3">
+                {walletBalance.getTokenBalanceInfo('USDC').formattedUSD}
+              </p>
+              <button
+                onClick={walletBalance.requestMockUSDC}
+                disabled={walletBalance.faucetLoading}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-[#00ff88]/20 text-[#00ff88] hover:bg-[#00ff88]/30 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <Droplets className={`w-4 h-4 ${walletBalance.faucetLoading ? 'animate-pulse' : ''}`} />
+                <span className="text-sm font-medium">
+                  {walletBalance.faucetLoading ? 'Requesting...' : 'Get Mock USDC'}
+                </span>
+              </button>
+              {walletBalance.faucetError && (
+                <p className="mt-2 text-xs text-red-400">{walletBalance.faucetError}</p>
+              )}
+            </div>
+
+            {/* BTC Balance */}
+            <div className="bg-gray-800/50 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-2xl">{walletBalance.getTokenBalanceInfo('BTC').emoji}</span>
+                  <span className="font-medium">BTC</span>
+                </div>
+                <span className="text-sm text-gray-400">Mock</span>
+              </div>
+              <p className="text-xl font-semibold mb-1">
+                {walletBalance.getTokenBalanceInfo('BTC').formattedAmount} BTC
+              </p>
+              <p className="text-sm text-gray-400">
+                {walletBalance.getTokenBalanceInfo('BTC').formattedUSD}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400">Total Wallet Value</span>
+              <span className="text-xl font-bold text-[#00ff88]">
+                {formatUSD(walletBalance.totalUSD)}
+              </span>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       {/* Modals */}
