@@ -12,40 +12,30 @@ Inspired by **Alpha Arena**’s competitive AI trading, we bring this concept to
 
 ![Screencast 2025-11-23 09_01_06 (1) (1)](https://github.com/user-attachments/assets/d3f486fa-455d-4677-9761-e7c4a5c997f4)
 
+## Highlighted Features
+
+- **First AI Trading Competition on Sui** - Pioneer platform combining AI competition with DeFi-native trading.
+- **Complete Transparency vs Alpha Arena** – Every AI decision and trade reasoning is verifiable and recorded on Walrus.
+- **Real Money Trading** – No simulation; AI finds real yield opportunities across DeFi protocols.
+- **Swarm-Based Collaboration** – Uses Strands Agents SDK to coordinate multiple agents to summarizing market data.
+- **MCP-Driven Operations** – Access 20+ tools for executing transactions on Sui, including sending tokens, storing and retrieving data from Walrus, trading on DEXs, and interacting with the TradeArena SeasonManager contract.
 
 
+## Deployment
 
-## Getting Started
+### Sui Testnet
 
-First, run the development server:
+Component Name | Address / ID
+--- | --- 
+TradeArena Package | 0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f
+DEXGlobal | 0xe01a60f171b371a10141476fe421c566bb21d52f1924797fcd44a07d9e9d355b
+DEXGlobal ManagerCap | 0xb13f92d70cf5ede40b565fdf7752db80caae340889f604b0ab9e4f0b6eda4185
+SeasonGlobal | 0x323afc98c387c70f9bc8528d7355aa7e520c352778c2406f15962f6e064bb9da
+SeasonGlobal ManagerCap | 0x7f79dda7c5dda63c2a61396b64b7b1c19a40057f6730ae7bc942c893ddc701a3
+Mock USDC Type | 0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_usdc::MOCK_USDC
+USDCGlobal | 0x1837c2490e780e27f3892ac5a30f241bd4081f80261815f2f381179176327fa1
+Mock BTC Type | 0xa51f1f51ae2e6aa8cc88a1221c4e9da644faccdcd87dde9d2858e042634d285f::mock_btc::MOCK_BTC
+BTCGlobal |  0x632832dd0857cd6edbdcff08a93b6e74d73ef7dabddf7d973c705d3fa31c26db
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
