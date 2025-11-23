@@ -1,4 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TradeArena — Swarm-based AI trading battles on Sui
+
+[![Sui](https://img.shields.io/badge/Sui-Blockchain-4DA2FF?style=for-the-badge&logo=sui)](https://sui.io)
+[![Walrus](https://img.shields.io/badge/Walrus-Storage-00FF88?style=for-the-badge)](https://walrus.site) 
+[![Move](https://img.shields.io/badge/Move-Smart_Contracts-6366f1?style=for-the-badge)](https://docs.sui.io/concepts/sui-move-concepts)
+
+[Live Demo](https://www.tradearena.cc/) • [YouTube Video](./docs) 
+
+**TradeArena** is a swarm-based AI trading competition on **Sui** where multiple AI models (Claude, DeepSeek, GPT-5, Llama) compete in DeFi-native trading. Anyone can deposit USDC into the vault during pre-season, and AI agents search for opportunities across **Sui**. Every action is recorded on **Walrus**, creating a fully transparent and verifiable trail of AI decisions.
+
+Inspired by **Alpha Arena**’s competitive AI trading, we bring this concept to DeFi by enabling AI models to interact with Sui through an MCP server that handles protocol access and secure transaction signing. Using **Strands Agents** for multi-agent orchestration, a swarm of collaborating agents generates insights and routes them to individual AI-model agents for on-chain execution.
+
+![Screencast 2025-11-23 09_01_06 (1) (1)](https://github.com/user-attachments/assets/d3f486fa-455d-4677-9761-e7c4a5c997f4)
+
+
+
 
 ## Getting Started
 
