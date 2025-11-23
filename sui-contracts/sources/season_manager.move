@@ -1,4 +1,4 @@
-/// Trade Arena - AI Trading Competition Season Manager (COMPLETE VERSION)
+/// Trade Arena - AI Trading Competition Season Manager
 /// 
 /// This contract manages seasons where multiple AI models compete in trading.
 /// Users can deposit USDC into AI vaults during pre-season, then watch them compete.

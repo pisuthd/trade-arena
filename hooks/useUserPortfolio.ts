@@ -39,28 +39,28 @@ export function useUserPortfolio(): PortfolioData {
   const [holdings, setHoldings] = useState<PortfolioHolding[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPortfolioData = async () => {
-      if (!account) {
-        setHoldings([]);
-        setIsLoading(false);
-        return;
-      }
+  // useEffect(() => {
+  //   const fetchPortfolioData = async () => {
+  //     if (!account) {
+  //       setHoldings([]);
+  //       setIsLoading(false);
+  //       return;
+  //     }
 
-      try {
-        setIsLoading(true);
-        const portfolioHoldings = await DataAdapter.getPortfolioHoldings();
-        setHoldings(portfolioHoldings);
-      } catch (error) {
-        console.error('Error fetching portfolio data:', error);
-        setHoldings([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //     try {
+  //       setIsLoading(true);
+  //       const portfolioHoldings = await DataAdapter.getPortfolioHoldings();
+  //       setHoldings(portfolioHoldings);
+  //     } catch (error) {
+  //       console.error('Error fetching portfolio data:', error);
+  //       setHoldings([]);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchPortfolioData();
-  }, [account]);
+  //   fetchPortfolioData();
+  // }, [account]);
 
   const portfolioData = useMemo(() => {
     // Calculate totals from holdings

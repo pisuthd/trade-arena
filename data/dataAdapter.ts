@@ -1,20 +1,12 @@
-// Data adapter for switching between mock and real contract data
+ 
 import {
-  Trade,
-  VaultValue,
-  AIModel,
-  PortfolioHolding,
-  SeasonData,
-  HistoricalTrade,
-  generateMockPortfolioHoldings,
-  generateMockHistoricalTrades
+  Trade, 
+  SeasonData, 
 } from './dataModel';
 import { SuiClient, getFullnodeUrl } from '@mysten/sui/client';
 import { Transaction } from '@mysten/sui/transactions';
 import { CONTRACT_ADDRESSES, CONTRACT_TARGETS, GAS_CONFIG, convertToDecimals, convertFromDecimals } from '../config/contracts';
 
-// Configuration flag for switching between mock and real data
-export const USE_MOCK_DATA = false;
 
 // Wallet balance interface
 export interface WalletBalances {
@@ -100,89 +92,8 @@ export class DataAdapter {
   // Public method to get current BTC price
   static async getBTCPrice(): Promise<number> {
     return this.fetchBTCPrice();
-  }
-  static async getAIModels(): Promise<AIModel[]> {
-    if (USE_MOCK_DATA) {
-      const { AI_MODELS } = await import('./dataModel');
-      return AI_MODELS;
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would query smart contract for AI model info
-    return [];
-  }
-
-  static async getChartData(): Promise<VaultValue[]> {
-    if (USE_MOCK_DATA) {
-      const { generateMockChartData } = await import('./dataModel');
-      return generateMockChartData();
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would query vault balances over time from contract
-    return [];
-  }
-
-  static async getTradeFeed(): Promise<Trade[]> {
-    if (USE_MOCK_DATA) {
-      const { INITIAL_TRADES } = await import('./dataModel');
-      return INITIAL_TRADES;
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would query trade history from contract events
-    return [];
-  }
-
-  static async generateNewTrade(): Promise<Trade> {
-    if (USE_MOCK_DATA) {
-      const { generateMockTrade } = await import('./dataModel');
-      return generateMockTrade();
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would listen to real-time trade events
-    throw new Error('Real-time trade generation not implemented for contract data');
-  }
-
-  static async getSeasonInfo(seasonNumber: number): Promise<ContractSeasonInfo | null> {
-    if (USE_MOCK_DATA) {
-      // Return mock season info
-      return {
-        season_number: seasonNumber,
-        status: 1, // Active
-        ai_models: [
-          { name: 'Amazon Nova Pro', wallet_address: '0x1' },
-          { name: 'Claude Sonnet 4.5', wallet_address: '0x2' },
-          { name: 'Llama 4 Maverick', wallet_address: '0x3' },
-        ],
-        created_at: Date.now() - 86400000, // 1 day ago
-        started_at: Date.now() - 43200000, // 12 hours ago
-        ended_at: 0,
-        total_trades: 24,
-        total_volume: 15000000, // 15 USDC (6 decimals)
-      };
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would query season manager contract
-    return null;
-  }
-
-  static async getVaultBalance(seasonNumber: number, aiName: string): Promise<ContractVaultBalance | null> {
-    if (USE_MOCK_DATA) {
-      // Return mock vault balance
-      return {
-        usdc_balance: 5000000, // 5 USDC (6 decimals)
-        btc_balance: 75000000, // 0.75 BTC (8 decimals)
-        lp_supply: 1000000, // 1 LP token
-      };
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would query vault balance from contract
-    return null;
-  }
+  }  
+ 
 
   // Helper function to format contract data to UI format
   static formatContractTrade(contractTrade: ContractTradeRecord): Trade {
@@ -219,17 +130,7 @@ export class DataAdapter {
   static formatBTC(amount: number): string {
     return convertFromDecimals(amount, 'BTC').toFixed(8);
   }
-
-  // New methods for portfolio, seasons, and historical trades
-  static async getPortfolioHoldings(seasonNumber?: number): Promise<PortfolioHolding[]> {
-    if (USE_MOCK_DATA) {
-      return generateMockPortfolioHoldings(seasonNumber);
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would query user's vault holdings from contract
-    return [];
-  }
+ 
 
   static async getSeasons(btcPriceOverride?: number): Promise<SeasonData[]> {
     // Get BTC price (use override if provided, otherwise fetch from API)
@@ -426,17 +327,7 @@ export class DataAdapter {
       return [];
     }
   }
-
-  static async getHistoricalTrades(seasonNumber?: number): Promise<HistoricalTrade[]> {
-    if (USE_MOCK_DATA) {
-      return generateMockHistoricalTrades(seasonNumber);
-    }
-
-    // TODO: Implement real contract data fetching
-    // This would query trade history from contract events
-    return [];
-  }
-
+ 
   // Helper function to get season status text
   static getSeasonStatusText(status: number) {
     switch (status) {
@@ -602,11 +493,5 @@ export class DataAdapter {
       return false;
     }
   }
-
-  // Helper method to set mock data mode
-  static setUseMockData(useMock: boolean) {
-    // This would be implemented to dynamically switch between mock and real data
-    // For now, it's controlled by the USE_MOCK_DATA constant
-    console.log(`Data adapter mode: ${useMock ? 'MOCK' : 'REAL'}`);
-  }
+ 
 }
