@@ -77,6 +77,11 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
     }).format(value);
   };
 
+  const formatAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -229,7 +234,7 @@ export default function DepositModal({ isOpen, onClose, modelName, modelEmoji, v
                       <CheckCircle className="w-5 h-5 text-green-400" />
                       <div>
                         <p className="font-semibold text-green-400">Wallet Connected</p>
-                        <p className="text-sm text-gray-400">sui...abc123</p>
+                        <p className="text-sm text-gray-400">{formatAddress(currentAccount?.address || '')}</p>
                       </div>
                     </div>
 

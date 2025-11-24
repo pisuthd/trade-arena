@@ -37,7 +37,7 @@ export default function WalrusTradeDetailsModal({
   const [walrusData, setWalrusData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [copiedItem, setCopiedItem] = useState<string | null>(null);
-  const [showFullJson, setShowFullJson] = useState(true);
+  const [showFullJson, setShowFullJson] = useState(false);
 
   // Format currency values
   const formatCurrency = (value: number) => {
@@ -132,10 +132,7 @@ export default function WalrusTradeDetailsModal({
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-800">
-            <div className="flex items-center space-x-3">
-              {/* <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                <Eye className="w-6 h-6 text-purple-400" />
-              </div> */}
+            <div className="flex items-center space-x-3"> 
               <div>
                 <h3 className="text-xl font-bold">AI Trade History</h3>
                 <p className="text-sm text-gray-400">Verify every AI decision and trade on-chain with immutable Walrus proof </p>
@@ -185,12 +182,7 @@ export default function WalrusTradeDetailsModal({
               </div>
 
               {/* Blockchain Trade Entry */}
-              <div className="space-y-4">
-                {/* <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                  <h4 className="text-lg font-semibold">Blockchain Trade Entry</h4>
-                </div> */}
-
+              <div className="space-y-4"> 
                 <div className="bg-gray-800/50 rounded-lg p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-gray-400">Action</span>
