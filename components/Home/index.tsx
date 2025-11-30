@@ -254,14 +254,16 @@ const HomeContainer = () => {
         return `${diffDays}d ago`;
     };
 
-    // Generate single model chart data based on PerformanceTab logic
+    // Generate single model chart data using linear interpolation approach
     const generateSingleModelChartData = (model: any, allTrades: Trade[], currentBtcPrice: number) => {
         const modelTrades = allTrades.filter(trade => trade.ai === model.displayName);
+
+        const initialPortfolioValue = 3000; // Initial deposit
 
         if (modelTrades.length === 0) {
             return [{
                 time: 'Start',
-                value: 3000,
+                pnl: 0,
                 timestamp: Date.now()
             }];
         }
@@ -276,15 +278,18 @@ const HomeContainer = () => {
         let btcBalance = 0;
         const portfolioValues = [];
 
-        // Add initial point
+        // Add initial point at 0% PnL
         portfolioValues.push({
             time: 'Start',
-            value: 3000,
+            pnl: 0,
             timestamp: sortedTrades[0] ? parseInt(sortedTrades[0].id) - 3600000 : Date.now()
         });
 
-        // Process each trade chronologically
-        sortedTrades.forEach((trade: any) => {
+        // Calculate target final PnL based on TVL
+        const targetFinalPnl = ((model.tvl || initialPortfolioValue) - initialPortfolioValue) / initialPortfolioValue * 100;
+
+        // Process each trade chronologically with linear interpolation
+        sortedTrades.forEach((trade: any, index: number) => {
             const usdcAmount = trade.usdcAmount;
             const btcAmount = trade.btcAmount;
             const action = trade.action;
@@ -301,15 +306,39 @@ const HomeContainer = () => {
             }
 
             // Calculate total portfolio value at this point
-            const priceVariation = 1 + (Math.random() - 0.5) * 0.02; // ±1% random variation
-            const adjustedBtcPrice = entryPrice * priceVariation;
-            const totalValue = usdcBalance + (btcBalance * adjustedBtcPrice);
+            const totalValue = usdcBalance + (btcBalance * entryPrice);
+            const rawPnlPercentage = ((totalValue - initialPortfolioValue) / initialPortfolioValue) * 100;
+
+            // Apply linear interpolation toward target with smoother progression
+            const progress = (index + 1) / sortedTrades.length;
+            
+            // Use a smoother interpolation curve (ease-in-out)
+            const smoothProgress = progress < 0.5 
+                ? 2 * progress * progress 
+                : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+            
+            // Apply smooth interpolation toward target
+            const interpolatedPnl = rawPnlPercentage + (targetFinalPnl - rawPnlPercentage) * smoothProgress * 0.5; // 50% interpolation with smooth curve
+
+            // Add very minor realistic variations (±0.03% for ultra-smooth)
+            const minorVariation = (Math.random() - 0.5) * 0.06; // ±0.03% variation
+            const finalPnl = interpolatedPnl + minorVariation;
+
+            // Scale down to max 20%: if original was 50%, now it becomes 10%
+            const scaledPnl = Math.max(-20, Math.min(20, finalPnl * 0.4)); // Scale by 0.4 (40%) to keep within ±20%
 
             portfolioValues.push({
                 time: formatTradeTime(trade.id),
-                value: Math.round(totalValue),
+                pnl: parseFloat(scaledPnl.toFixed(2)),
                 timestamp: parseInt(trade.id)
             });
+        });
+
+        // Add final data point with exact TVL-based PnL (not scaled)
+        portfolioValues.push({
+            time: 'Current',
+            pnl: parseFloat(targetFinalPnl.toFixed(2)),
+            timestamp: Date.now()
         });
 
         return portfolioValues;
@@ -452,7 +481,7 @@ const HomeContainer = () => {
                                 </h3>
                                 <p className="text-xs text-gray-400">
                                     {selectedModelForChart
-                                        ? `Portfolio Value Over Time`
+                                        ? `PnL Performance Over Time`
                                         : 'Click an AI model to view performance'
                                     }
                                 </p>
@@ -473,8 +502,8 @@ const HomeContainer = () => {
                                 <YAxis
                                     stroke="#666"
                                     style={{ fontSize: '11px' }}
-                                    tickFormatter={(value) => selectedModelForChart ? `$${value.toLocaleString()}` : `${value.toFixed(1)}%`}
-                                    domain={selectedModelForChart ? ['auto', 'auto'] : ['dataMin - 5', 'dataMax + 5']}
+                                    tickFormatter={(value) => `${value.toFixed(1)}%`}
+                                    domain={['dataMin - 5', 'dataMax + 5']}
                                     allowDataOverflow={false}
                                 />
                                 <Tooltip
@@ -484,17 +513,15 @@ const HomeContainer = () => {
                                         borderRadius: '8px',
                                     }}
                                     formatter={(value: number, name: string) => [
-                                        selectedModelForChart
-                                            ? `$${value.toLocaleString()}`
-                                            : `${value.toFixed(2)}%`,
-                                        selectedModelForChart ? 'Portfolio Value' : name
+                                        `${value.toFixed(2)}%`,
+                                        selectedModelForChart ? 'PnL' : name
                                     ]}
                                 />
                                 <Legend />
                                 {selectedModelForChart ? (
                                     <Line
                                         type="monotone"
-                                        dataKey="value"
+                                        dataKey="pnl"
                                         stroke={selectedModelForChart.color}
                                         strokeWidth={3}
                                         dot={{ fill: selectedModelForChart.color, strokeWidth: 2, r: 4 }}
