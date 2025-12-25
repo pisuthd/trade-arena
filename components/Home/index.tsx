@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { TrendingUp, Zap, Trophy, Activity } from 'lucide-react';
+import { TrendingUp, Zap, Trophy, Activity, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -12,6 +12,7 @@ import { Trade, VaultValue, AIModel } from '@/data/dataModel';
 import HomeAIModelCard from './HomeAIModelCard';
 import HomeTradeFeed from './HomeTradeFeed';
 import WalrusTradeDetailsModal from '../WalrusTradeDetailsModal';
+import DirectionModal from '../DirectionModal';
 import { parseWalrusBlobId } from '@/lib/utils';
 import AboutContainer from '@/components/About';
 
@@ -25,6 +26,7 @@ const HomeContainer = () => {
     const [btcPrice, setBtcPrice] = useState<number>(95000);
     const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDirectionModalOpen, setIsDirectionModalOpen] = useState(false);
     const [selectedModelForChart, setSelectedModelForChart] = useState<any>(null);
     const [singleModelChartData, setSingleModelChartData] = useState<any[]>([]);
 
@@ -35,6 +37,16 @@ const HomeContainer = () => {
     const seasonInfo = seasonData?.data?.content as any;
     const seasonStatus = seasonInfo?.fields?.status || 0;
     const statusInfo = getSeasonStatusText(seasonStatus);
+
+    // Show direction modal on page load
+    useEffect(() => {
+        // Show modal after a short delay to allow page to render
+        const timer = setTimeout(() => {
+            setIsDirectionModalOpen(true);
+        }, 1000); // 1 second delay
+        
+        return () => clearTimeout(timer);
+    }, []);
 
     // Initialize data with real Season 1 data
     useEffect(() => {
@@ -407,11 +419,23 @@ const HomeContainer = () => {
                     transition={{ duration: 0.6 }}
                     className="text-center"
                 >
-                    <h2 className="text-3xl font-bold mb-1">
-                        <span className="bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#00ff88] bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
-                            AI Models Compete • Real Capital • Verified by Walrus
-                        </span>
-                    </h2>
+                    <div className="flex items-center justify-center gap-3 mb-2">
+                        <h2 className="text-3xl font-bold">
+                            <span className="bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#00ff88] bg-clip-text text-transparent animate-gradient bg-[length:200%_auto]">
+                                AI Models Compete • Real Capital • Verified by Walrus
+                            </span>
+                        </h2>
+                        <motion.button
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.6, delay: 0.4 }}
+                            onClick={() => setIsDirectionModalOpen(true)}
+                            className="p-2 rounded-full bg-gradient-to-r from-[#00ff88]/20 to-[#00d4ff]/20 border border-[#00ff88]/30 hover:border-[#00ff88]/50 transition-all group"
+                            title="Click me"
+                        >
+                            <Sparkles className="w-4 h-4 text-[#00ff88] group-hover:rotate-12 transition-transform" />
+                        </motion.button>
+                    </div>
                 </motion.div>
 
                 {/* Deposit Button */}
@@ -421,12 +445,12 @@ const HomeContainer = () => {
                     transition={{ duration: 0.6, delay: 0.2 }}
                     className="flex justify-center mt-4"
                 >
-                    <Link
-                        href="/season"
+                    <div
+                        onClick={() => setIsDirectionModalOpen(true)}
                         className="px-6 py-3 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-bold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
                     >
-                        Join Season 2 →
-                    </Link>
+                        Click Me
+                    </div>
                 </motion.div>
 
             </div>
@@ -614,6 +638,12 @@ const HomeContainer = () => {
                     blobId={parseWalrusBlobId(selectedTrade.walrus_blob_id)}
                 />
             )}
+
+            {/* Direction Modal */}
+            <DirectionModal
+                isOpen={isDirectionModalOpen}
+                onClose={() => setIsDirectionModalOpen(false)}
+            />
 
             <style jsx>{`
             @keyframes gradient {
