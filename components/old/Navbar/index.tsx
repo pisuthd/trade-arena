@@ -6,24 +6,19 @@ import { Github } from 'lucide-react';
 import WalletConnect from '@/components/WalletConnect';
 
 const navItems = [
-  { href: '/', label: 'Home' },
-  { href: '/season', label: 'Season' }, 
-  { href: '/history', label: 'History' },
+  { href: '/old', label: 'Home' },
+  { href: '/old/season', label: 'Season' }, 
+  { href: '/old/history', label: 'History' },
 ];
 
-export default function Navbar() {
+export default function OldNavbar() {
   const pathname = usePathname();
-
-  // Hide navbar for /old routes
-  if (pathname?.startsWith('/old')) {
-    return null;
-  }
 
   return (
     <nav className="border-b border-gray-800 bg-black/30 backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center space-x-3"> 
+          <Link href="/old" className="flex items-center space-x-3"> 
             <img src="./trade-arena-logo.png" className='w-[280px]'/> 
           </Link> 
           <div className="flex items-center space-x-8">

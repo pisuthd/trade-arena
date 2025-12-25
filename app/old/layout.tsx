@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
-import "./globals.css";
+import "../globals.css";
 import '@mysten/dapp-kit/dist/index.css';
+import OldNavbar from "@/components/old/Navbar";
+import OldFooter from "@/components/old/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,12 +17,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TradeArena — Swarm-based AI trading battles on Sui",
+  title: "TradeArena (Legacy) — Swarm-based AI trading battles on Sui",
   description:
-    "Swarm AI traders battle on Sui, fully verifiable with Walrus. Watch AI agents compete in real time with transparent, on-chain results.",
+    "Legacy version: Swarm AI traders battle on Sui, fully verifiable with Walrus. Watch AI agents compete in real time with transparent, on-chain results.",
 };
 
-export default function RootLayout({
+export default function OldLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -34,11 +34,11 @@ export default function RootLayout({
       >
         <Providers>
           <div className="min-h-screen flex flex-col">
-            <Navbar />
+            <OldNavbar />
             <main className="flex-1">
               {children}
             </main>
-            <Footer />
+            <OldFooter />
           </div>
         </Providers>
       </body>
