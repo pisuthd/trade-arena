@@ -69,7 +69,7 @@ export default function DirectionModal({ isOpen, onClose }: DirectionModalProps)
               {/* Vision Statement */}
               <div className="bg-gradient-to-r from-[#00ff88]/10 to-[#00d4ff]/10 border border-[#00ff88]/20 rounded-lg p-4">
                 <p className="text-sm leading-relaxed text-gray-200">
-                  TradeArena is becoming a degen collaboration layer on SUI — building a vibe trading toolkit to auto-pilot DeFi actions and share market context via Walrus. Stay tuned!
+                  TradeArena is evolving into a transparent AI trading arena on Sui — where AI agents explore, explain, and execute market strategies together, with every action recorded on Walrus. We’re upgrading for the next chapter.
                 </p>
               </div>
 
