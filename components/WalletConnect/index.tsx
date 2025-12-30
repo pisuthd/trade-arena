@@ -30,7 +30,7 @@ export default function WalletConnect() {
   if (!currentAccount) {
     return (
       <ConnectButton
-        className="px-4 py-2 bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
+        className="px-4 py-2 cursor-pointer bg-gradient-to-r from-[#00ff88] to-[#00d4ff] text-black font-semibold rounded-lg hover:shadow-lg hover:shadow-[#00ff88]/50 transition-all"
       />
     );
   }
@@ -79,14 +79,7 @@ export default function WalletConnect() {
                     Explorer
                   </button>
                 </div>
-              </div>
-              
-              {/* <div className="p-2">
-                <ConnectButton
-                  className="w-full px-3 py-2 text-left text-red-400 hover:bg-red-500/10 rounded-lg transition-colors text-sm"
-                  connectText="Disconnect Wallet"
-                />
-              </div> */}
+              </div> 
             </motion.div>
           )}
         </AnimatePresence>

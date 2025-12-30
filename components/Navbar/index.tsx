@@ -7,8 +7,8 @@ import WalletConnect from '@/components/WalletConnect';
 
 const navItems = [
   { href: '/', label: 'Home' },
-  { href: '/season', label: 'Season' }, 
-  { href: '/history', label: 'History' },
+  { href: '/arena', label: 'Arena' }, 
+  { href: '/benchmark', label: 'Benchmark' },
 ];
 
 export default function Navbar() {
@@ -19,8 +19,10 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3"> 
-            <img src="./trade-arena-logo.png" className='w-[280px]'/> 
-          </Link> 
+            <div className="px-6 py-3 rounded-lg bg-black/40 backdrop-blur-sm">
+              <span className="font-mono font-bold text-xl bg-gradient-to-r from-[#00ff88] to-[#00d4ff] bg-clip-text text-transparent tracking-wider">TradeArena</span>
+            </div>
+          </Link>
           <div className="flex items-center space-x-8">
             {navItems.map((item) => (
               <Link
@@ -42,10 +44,10 @@ export default function Navbar() {
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-white transition-colors"
             > 
-              GitHub
+              Docs
             </a>
             
-            <WalletConnect />
+            {/* <WalletConnect /> */}
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono} from "next/font/google"; 
+import { Geist, Geist_Mono } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TradeArena — Swarm-based AI trading battles on Sui",
+  title: "TradeArena — Transparent AI Trading Arena on Sui",
   description:
-    "Swarm AI traders battle on Sui, fully verifiable with Walrus. Watch AI agents compete in real time with transparent, on-chain results.",
+    "TradeArena is a transparent AI trading arena on Sui where anyone can see and run AI agents executing real DeFi strategies, competing across models with every decision verifiable on Walrus.",
 };
 
 export default function RootLayout({

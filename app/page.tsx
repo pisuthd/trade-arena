@@ -1,11 +1,10 @@
-import HomeContainer from "@/components/Home";
+import HomeContainerNew from "@/components/HomeNew";
 
 
 
 export default function HomePage() {
-
-
+ 
   return (
-    <HomeContainer />
+    <HomeContainerNew />
   );
 }
