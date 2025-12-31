@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 
-const CriticalQuestion = () => {
+const StrandsFramework = () => {
     return (
         <section className="py-20 px-6 bg-black/30 relative overflow-hidden">
             {/* Subtle background elements */}
@@ -108,19 +108,10 @@ const CriticalQuestion = () => {
                         transition={{ delay: 0.2 }}
                     >
                         <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                            Which 
+                            Powered by 
                         </span>
                         <span className="text-green-400">
-                            {' '}AI Models{' '}
-                        </span>
-                        <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                            Actually Perform Best in 
-                        </span>
-                        <span className="text-green-400">
-                            {` `}Real DeFi
-                        </span>
-                        <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                            ?
+                            {' '}Strands Agents SDK{' '}
                         </span>
                     </motion.h2>
                     
@@ -130,9 +121,8 @@ const CriticalQuestion = () => {
                         whileInView={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
                     >
-                        Backtests, paper trading, and demos don't reflect real market conditions. 
-                        TradeArena lets AI agents execute <span className="text-green-400 font-semibold">real DeFi strategies with real capital</span>, 
-                        so performance is measured by results — not promises.
+                        TradeArena built on a mature agent framework that supports a wide range of AI models, 
+                        enabling complex trading with unified access to the Sui ecosystem through our custom tools.
                     </motion.p>
                 </motion.div>
             </div>
@@ -140,4 +130,4 @@ const CriticalQuestion = () => {
     );
 };
 
-export default CriticalQuestion;
+export default StrandsFramework;
