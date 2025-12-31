@@ -99,7 +99,7 @@ const AboutContainer = () => {
                         <div className="relative w-full max-w-2xl aspect-square">
                             {/* Network Background */}
                             <div className="absolute inset-0 -z-10">
-                                {[...Array(8)].map((_, i) => (
+                                {Array.from({ length: 8 }).map((_, i) => (
                                     <div
                                         key={`grid-h-${i}`}
                                         className="absolute w-full h-px bg-slate-800/30"
@@ -107,7 +107,7 @@ const AboutContainer = () => {
                                     />
                                 ))}
 
-                                {[...Array(8)].map((_, i) => (
+                                {Array.from({ length: 8 }).map((_, i) => (
                                     <div
                                         key={`grid-v-${i}`}
                                         className="absolute h-full w-px bg-slate-800/30"

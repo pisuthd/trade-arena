@@ -173,7 +173,7 @@ const HomeContainer = () => {
         };
 
         // Get all unique timestamps from all trades
-        const allTimestamps = [...new Set(trades.map(t => parseInt(t.id)))].sort((a, b) => a - b);
+        const allTimestamps = Array.from(new Set(trades.map(t => parseInt(t.id)))).sort((a, b) => a - b);
 
         // Start with initial values at 0% PnL
         if (allTimestamps.length > 0) {

@@ -9,7 +9,7 @@ const Hero = () => {
     const arenaAgents = [
         { 
             id: 'user-1', 
-            name: 'User 0x1223...3434', 
+            name: '0x1223...3434', 
             role: 'Claude Sonnet 4.5', 
             color: '#00ff88', 
             x: 15, y: 15, 
@@ -20,7 +20,7 @@ const Hero = () => {
         },
         { 
             id: 'user-2', 
-            name: 'User 0xABCD...EFGH', 
+            name: '0xABCD...EFGH', 
             role: 'Llama 4', 
             color: '#00d4ff', 
             x: 85, y: 15, 
@@ -31,7 +31,7 @@ const Hero = () => {
         },
         { 
             id: 'user-3', 
-            name: 'User 0x9876...5432', 
+            name: '0x9876...5432', 
             role: 'GPT-5', 
             color: '#ff00ff', 
             x: 15, y: 85, 
@@ -42,7 +42,7 @@ const Hero = () => {
         },
         { 
             id: 'user-4', 
-            name: 'User 0x1111...2222', 
+            name: '0x1111...2222', 
             role: 'Gemini Pro', 
             color: '#ff6b00', 
             x: 85, y: 85, 
@@ -54,7 +54,7 @@ const Hero = () => {
         { 
             id: 'walrus', 
             name: 'Walrus', 
-            role: 'Storage & Verification', 
+            role: 'Verifiable AI Decisions', 
             color: '#ffffff', 
             x: 50, y: 50, 
             performance: null, 
@@ -164,11 +164,33 @@ const Hero = () => {
                                 className="px-8 py-4 bg-black/60 border border-gray-700 text-white font-semibold rounded-lg hover:border-gray-600 transition-all flex items-center justify-center group"
                             >
                                 <Play className="w-5 h-5 mr-2" />
-                                Learn More
+                                Watch YouTube
                             </Link>
                         </motion.div>
 
+                        {/* Live now on SUI Mainnet */}
                         <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.6 }}
+                            className="flex justify-start"
+                        >
+                            <div className="inline-flex items-center gap-2">
+                                {/* Sui Icon */}
+                                <img 
+                                    src="/sui-icon.png" 
+                                    alt="Sui" 
+                                    className="w-6 h-6"
+                                />
+
+                                {/* Text */}
+                                <span className="text-base text-green-400">
+                                    Live now on SUI Mainnet
+                                </span>
+                            </div>
+                        </motion.div>
+
+                        {/* <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.6 }}
@@ -191,7 +213,7 @@ const Hero = () => {
                                     <div className="text-sm text-gray-400">{stat.label}</div>
                                 </motion.div>
                             ))}
-                        </motion.div>
+                        </motion.div> */}
                     </motion.div>
 
                     {/* Right Side - Swarm Intelligence Visualization */}
@@ -204,7 +226,7 @@ const Hero = () => {
                         <div className="relative w-full aspect-square max-w-md mx-auto">
                             {/* Network Background */}
                             <div className="absolute inset-0 -z-10">
-                                {[...Array(8)].map((_, i) => (
+                                {Array.from({ length: 8 }).map((_, i) => (
                                     <div
                                         key={`grid-h-${i}`}
                                         className="absolute w-full h-px bg-slate-800/30"
@@ -212,7 +234,7 @@ const Hero = () => {
                                     />
                                 ))}
 
-                                {[...Array(8)].map((_, i) => (
+                                {Array.from({ length: 8 }).map((_, i) => (
                                     <div
                                         key={`grid-v-${i}`}
                                         className="absolute h-full w-px bg-slate-800/30"
