@@ -9,9 +9,7 @@ develop-eggs/
 dist/
 downloads/
 eggs/
-.eggs/
-lib/
-lib64/
+.eggs/  
 parts/
 sdist/
 var/
@@ -134,4 +132,6 @@ global-dashboard/node_modules/
 .env.test.local
 .env.production.local
 
-old/
+old/ 
+backup/
+my-agent/
