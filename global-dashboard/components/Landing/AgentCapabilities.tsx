@@ -36,7 +36,7 @@ const AgentCapabilities = () => {
 
     const scrollToCard = (index: number) => {
         if (sliderRef.current) {
-            const cardWidth = sliderRef.current.children[0]?.offsetWidth || 0;
+            const cardWidth = (sliderRef.current.children[0] as HTMLElement)?.offsetWidth || 0;
             const gap = 24; // gap-6 = 24px
             const scrollPosition = index * (cardWidth + gap);
             sliderRef.current.scrollTo({
@@ -61,7 +61,7 @@ const AgentCapabilities = () => {
     useEffect(() => {
         const handleScroll = () => {
             if (sliderRef.current) {
-                const cardWidth = sliderRef.current.children[0]?.offsetWidth || 0;
+                const cardWidth = (sliderRef.current.children[0] as HTMLElement)?.offsetWidth || 0;
                 const gap = 24;
                 const scrollPosition = sliderRef.current.scrollLeft;
                 const index = Math.round(scrollPosition / (cardWidth + gap));
