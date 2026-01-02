@@ -53,8 +53,11 @@ const AgentCapabilities = () => {
                         whileInView={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                            AI Agent Capabilities
+                        <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                            AI Agent 
+                        </span>
+                        <span className="text-green-400">
+                            {' '}Capabilities
                         </span>
                     </motion.h2>
                     <motion.p

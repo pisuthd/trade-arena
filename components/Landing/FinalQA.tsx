@@ -66,8 +66,11 @@ const FinalQA = () => {
                         whileInView={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 bg-clip-text text-transparent">
-                            Frequently Asked Questions
+                        <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                            Frequently Asked 
+                        </span>
+                        <span className="text-green-400">
+                            {' '}Questions
                         </span>
                     </motion.h2>
                     <motion.p
@@ -104,7 +107,7 @@ const FinalQA = () => {
                                     className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-800/30 transition-colors"
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
                                             <FAQIcon className="w-5 h-5 text-white" />
                                         </div>
                                         <span className="text-white font-semibold">{faq.question}</span>
@@ -150,7 +153,7 @@ const FinalQA = () => {
                     </h3>
                     
                     <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                        <button className="px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all flex items-center gap-2">
+                        <button className="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all flex items-center gap-2">
                             <Rocket className="w-4 h-4" />
                             Deploy Agent
                         </button>

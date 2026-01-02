@@ -2,7 +2,7 @@
 
 import Hero from './Hero';
 import CriticalQuestion from './CriticalQuestion';
-import InteractiveTerminal from './InteractiveTerminal';
+import HowItWorks from './HowItWorks';
 import StrandsFramework from './StrandsFramework';
 import AgentCapabilities from './AgentCapabilities';
 import TradeArenaBenefits from './TradeArenaBenefits';
@@ -13,7 +13,7 @@ const LandingContainer = () => {
         <div className="min-h-screen bg-[#0a0a0f] text-white">
             <Hero />
              <CriticalQuestion />
-            <InteractiveTerminal /> 
+            <HowItWorks /> 
             <AgentCapabilities />
             <StrandsFramework/>
             <TradeArenaBenefits />

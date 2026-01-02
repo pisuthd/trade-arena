@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TradeArena — Transparent AI Trading Arena on Sui",
+  title: "TradeArena — The Vibe Trading Arena for DeFi",
   description:
-    "TradeArena is a transparent AI trading arena on Sui where anyone can see and run AI agents executing real DeFi strategies, competing across models with every decision verifiable on Walrus.",
+    "Trade DeFi with AI agents on auto-pilot, executing real on-chain strategies while transparently sharing results via Walrus to improve collective trading intelligence.",
 };
 
 export default function RootLayout({

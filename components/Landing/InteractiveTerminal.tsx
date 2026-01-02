@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Terminal, Play, Pause, RotateCcw } from 'lucide-react';
 
-const InteractiveTerminal = () => {
+const InteractiveTerminal = ({ autoStart = false, embedded = false }: { autoStart?: boolean; embedded?: boolean }) => {
     const [currentCommand, setCurrentCommand] = useState('');
     const [commandHistory, setCommandHistory] = useState<string[]>([]);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -143,11 +143,15 @@ const InteractiveTerminal = () => {
     }, [commandHistory]);
 
     useEffect(() => {
+        if (autoStart && !isPlaying) {
+            runDemo();
+        }
+        
         return () => {
             // Cleanup on unmount
             demoControllerRef.current.shouldStop = true;
         };
-    }, []);
+    }, [autoStart]);
 
     const sleep = (ms: number) => {
         return new Promise(resolve => setTimeout(resolve, ms / playbackSpeed));
@@ -260,34 +264,36 @@ const InteractiveTerminal = () => {
     };
 
     return (
-        <section className="py-20 px-6 bg-black/50">
-            <div className="max-w-6xl mx-auto">
-                {/* Section Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="text-center mb-16"
-                >
-                    <motion.h2
-                        className="text-3xl lg:text-4xl font-bold mb-6"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
+        <section className={`${embedded ? '' : 'py-20 px-6 bg-black/50'}`}>
+            <div className={`${embedded ? '' : 'max-w-6xl mx-auto'}`}>
+                {/* Section Header - Only show when not embedded */}
+                {!embedded && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8 }}
+                        className="text-center mb-16"
                     >
-                        <span className="bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#ff00ff] bg-clip-text text-transparent">
-                            Deploy Your AI Agent in Minutes
-                        </span>
-                    </motion.h2>
-                    <motion.p
-                        className="text-xl text-gray-400 max-w-3xl mx-auto"
-                        initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                    >
-                        Watch how different AI models perform when deployed with real capital in actual DeFi markets.
-                    </motion.p>
-                </motion.div>
+                        <motion.h2
+                            className="text-3xl lg:text-4xl font-bold mb-6"
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <span className="bg-gradient-to-r from-[#00ff88] via-[#00d4ff] to-[#ff00ff] bg-clip-text text-transparent">
+                                Deploy Your AI Agent in Minutes
+                            </span>
+                        </motion.h2>
+                        <motion.p
+                            className="text-xl text-gray-400 max-w-3xl mx-auto"
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            Watch how different AI models perform when deployed with real capital in actual DeFi markets.
+                        </motion.p>
+                    </motion.div>
+                )}
 
                 {/* Terminal Interface */}
                 <motion.div

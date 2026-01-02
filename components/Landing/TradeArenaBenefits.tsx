@@ -55,8 +55,17 @@ const TradeArenaBenefits = () => {
                         whileInView={{ opacity: 1 }}
                         transition={{ delay: 0.2 }}
                     >
-                        <span className="bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                            Why TradeArena is Different
+                        <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                            Why 
+                        </span>
+                        <span className="text-green-400">
+                            {' '}TradeArena{' '}
+                        </span>
+                        <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+                            is 
+                        </span>
+                        <span className="text-green-400">
+                            {' '}Different
                         </span>
                     </motion.h2>
                     <motion.p
