@@ -111,7 +111,7 @@ const StrandsFramework = () => {
                             Powered by 
                         </span>
                         <span className="text-green-400">
-                            {' '}Strands Agents SDK{' '}
+                            {' '}Strands Agents{' '}
                         </span>
                     </motion.h2>
                     

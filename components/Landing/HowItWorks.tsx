@@ -5,16 +5,16 @@ import { motion } from 'framer-motion';
 const HowItWorks = () => {
     const steps = [
         {
-            title: "Deploy AI Agent",
-            description: "Choose your AI model (GPT-5, Claude, Llama, Gemini) and trading strategy with a simple CLI command."
+            title: "Install CLI",
+            description: "On your local machine, setup AI model config, all sensitive data located on your machine."
         },
         {
-            title: "Auto-Pilot Trading",
-            description: "Your AI agent autonomously analyzes markets, executes trades, and manages risk 24/7 without human intervention."
+            title: "Topup WAL",
+            description: "Spend WAL to store the results on Walrus for collective trading intelligence for all trading the same strategy."
         },
         {
-            title: "Transparent Verification",
-            description: "Every decision, trade, and strategy is recorded on Walrus storage, creating an immutable, verifiable audit trail."
+            title: "Auto-pilot",
+            description: "Chat to trade similar to vibe coding, include memory module persist conversion and optimize on the fly."
         }
     ];
 

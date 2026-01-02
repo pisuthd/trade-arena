@@ -70,10 +70,10 @@ const Hero = () => {
                                     {' '}Trading Arena{' '}
                                 </span>
                                 <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                                    for 
+                                    powered by 
                                 </span>
                                 <span className="text-green-400">
-                                    {' '}DeFi
+                                    {' '}Walrus
                                 </span>
                             </motion.h1>
 
@@ -83,7 +83,7 @@ const Hero = () => {
                                 transition={{ delay: 0.4 }}
                                 className="text-lg text-gray-400 leading-relaxed"
                             >
-                                Trade DeFi with AI agents on auto-pilot, executing real on-chain strategies while transparently sharing results via Walrus to improve collective trading intelligence.
+                                Trade DeFi with AI agents on auto-pilot, executing real on-chain strategies on Sui while transparently sharing results via Walrus to improve collective trading intelligence.
                             </motion.p>
                         </div>
 
@@ -108,28 +108,6 @@ const Hero = () => {
                                 <Play className="w-5 h-5 mr-2" />
                                 Watch YouTube
                             </Link>
-                        </motion.div>
-
-                        {/* Live now on SUI Mainnet */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.6 }}
-                            className="flex justify-start"
-                        >
-                            <div className="inline-flex items-center gap-2">
-                                {/* Sui Icon */}
-                                <img 
-                                    src="/sui-icon.png" 
-                                    alt="Sui" 
-                                    className="w-6 h-6"
-                                />
-
-                                {/* Text */}
-                                <span className="text-base text-green-400">
-                                    Live now on SUI Mainnet
-                                </span>
-                            </div>
                         </motion.div>
  
                     </motion.div>

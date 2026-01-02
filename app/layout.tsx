@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TradeArena — The Vibe Trading Arena for DeFi",
+  title: "TradeArena — The Vibe Trading Arena powered by Walrus",
   description:
     "Trade DeFi with AI agents on auto-pilot, executing real on-chain strategies while transparently sharing results via Walrus to improve collective trading intelligence.",
 };
