@@ -2,13 +2,13 @@
 
 import { motion } from 'framer-motion';
 
-const StrandsFramework = () => {
+const WhyWalrus = () => {
     return (
         <section className="py-20 px-6 bg-black/30 relative overflow-hidden">
             {/* Subtle background elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <motion.div
-                    className="absolute top-1/4 right-1/4 w-64 h-64 opacity-10"
+                    className="absolute top-1/4 left-1/4 w-64 h-64 opacity-10"
                     style={{
                         background: 'radial-gradient(circle, rgba(0,255,136,0.3) 0%, transparent 70%)',
                         filter: 'blur(40px)',
@@ -108,21 +108,22 @@ const StrandsFramework = () => {
                         transition={{ delay: 0.2 }}
                     >
                         <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                            Powered by 
+                            Why Need 
                         </span>
                         <span className="text-green-400">
-                            {' '}Strands Agents{' '}
+                            {' '}Walrus?
                         </span>
                     </motion.h2>
                     
                     <motion.p
-                        className="text-xl text-gray-400 leading-relaxed"
+                        className="text-xl text-gray-400 leading-relaxed max-w-4xl mx-auto"
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
                     >
-                        TradeArena built on a <span className="text-green-400 font-semibold">robust Python agent framework</span> that supports a <span className="text-green-400 font-semibold">wide range of AI models</span>, 
-                        enabling <span className="text-green-400 font-semibold">complex trading</span> with <span className="text-green-400 font-semibold">unified access</span> to the Sui ecosystem through our <span className="text-green-400 font-semibold">custom tools</span>.
+                        Because when <span className="text-green-400 font-semibold">real money</span> is involved, you need <span className="text-green-400 font-semibold">proof</span> - 
+                        <span className="text-green-400 font-semibold"> Walrus creates transparent, verifiable records</span> of AI trading performance 
+                        that <span className="text-green-400 font-semibold">build anyone trust</span>.
                     </motion.p>
                 </motion.div>
             </div>
@@ -130,4 +131,4 @@ const StrandsFramework = () => {
     );
 };
 
-export default StrandsFramework;
+export default WhyWalrus;

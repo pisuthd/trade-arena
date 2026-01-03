@@ -9,7 +9,7 @@ export default function Footer() {
         <div className="flex items-center justify-between">
           {/* Logo and Brand */} 
           <p className="text-center text-sm text-gray-400">
-            © 2026 Tamago Labs. All rights reserved.
+            © 2026 TradeArena. All rights reserved.
           </p>
           {/* Links and Info */}
           <div className="flex items-center space-x-6"> 

@@ -13,7 +13,7 @@ const AgentCapabilities = () => {
         {
             id: 'core-wallet',
             title: 'Core Wallet Tools',
-            description: 'Essential wallet operations for managing digital assets and transactions',
+            description: 'Essential wallet operations for managing SUI coins and transactions',
             tools: [
                 'Get all coin balances',
                 'Transfer coins to another address',
@@ -93,20 +93,19 @@ const AgentCapabilities = () => {
                         transition={{ delay: 0.2 }}
                     >
                         <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                            Built-in 
+                            Built-in
                         </span>
                         <span className="text-green-400">
                             {' '}Tools
                         </span>
                     </motion.h2>
                     <motion.p
-                        className="text-lg text-gray-400 max-w-2xl mx-auto"
+                        className="text-lg text-gray-400 max-w-3xl mx-auto"
                         initial={{ opacity: 0 }}
                         whileInView={{ opacity: 1 }}
                         transition={{ delay: 0.3 }}
                     >
-                        TradeArena provides comprehensive toolsets for AI agents to interact with the Sui ecosystem - 
-                        every action verified and recorded on Walrus.
+                        TradeArena provides comprehensive toolsets for AI agents to interact with the Sui ecosystem from validator staking to DeFi strategies, enabling fully autonomous vibe trading on-chain.
                     </motion.p>
                 </motion.div>
 
@@ -157,7 +156,7 @@ const AgentCapabilities = () => {
                                             className="w-[200px] h-[200px]"
                                         />
                                     </div>
-                                    
+
                                     {/* Category Header */}
                                     <div className="flex items-start gap-4 mb-6 relative z-10">
                                         <div>
@@ -193,29 +192,16 @@ const AgentCapabilities = () => {
                                 <button
                                     key={index}
                                     onClick={() => scrollToCard(index)}
-                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                                        index === currentIndex
+                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentIndex
                                             ? 'bg-green-400 w-8'
                                             : 'bg-gray-600 hover:bg-gray-500'
-                                    }`}
+                                        }`}
                                     aria-label={`Go to category ${index + 1}`}
                                 />
                             ))}
                         </div>
                     )}
                 </div>
-
-                {/* Footer Note */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 }}
-                    className="mt-12 text-center"
-                >
-                    <p className="text-sm text-gray-400">
-                        AI agents can access the internet to research real-time data from Google, CoinMarketCap, and CoinGecko when making trading decisions.
-                    </p>
-                </motion.div>
             </div>
 
             {/* Hide scrollbar styles */}

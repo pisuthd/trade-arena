@@ -3,9 +3,10 @@
 import Hero from './Hero';
 import CriticalQuestion from './CriticalQuestion';
 import HowItWorks from './HowItWorks';
+import WhyWalrus from './WhyWalrus';
 import StrandsFramework from './StrandsFramework';
 import AgentCapabilities from './AgentCapabilities';
-import TradeArenaBenefits from './TradeArenaBenefits';
+import WhatIsArena from './WhatIsArena';
 import FinalQA from './FinalQA'; 
 
 const LandingContainer = () => {
@@ -14,9 +15,10 @@ const LandingContainer = () => {
             <Hero />
              <CriticalQuestion />
             <HowItWorks /> 
+            <WhyWalrus />
             <AgentCapabilities />
             <StrandsFramework/>
-            <TradeArenaBenefits />
+            <WhatIsArena />
             <FinalQA /> 
         </div>
     );
